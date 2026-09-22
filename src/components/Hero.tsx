@@ -107,6 +107,13 @@ export function Hero() {
             </div>
           ))}
         </dl>
+
+        <p
+          className="rise mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-paper-faint"
+          style={{ animationDelay: "0.7s" }}
+        >
+          {profile.metricsNote}
+        </p>
       </div>
     </section>
   );

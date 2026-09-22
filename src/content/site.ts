@@ -22,6 +22,10 @@ export const profile = {
   subhead:
     "Three years turning research-grade AI into products people actually use — RAG over pgvector, multi-provider LLM pipelines, and document systems running live in healthcare, fintech, legal-tech and fundraising.",
 
+  // Sits under the metric band. From the résumé summary, and too good to bury.
+  metricsNote:
+    "Plus 40+ hours of manual work automated every week across those four products.",
+
   // About
   about: [
     "I'm a fullstack engineer who specialises in the unglamorous half of AI: the retrieval quality, the evaluation loops, the chunking strategy, the fallback when a provider rate-limits you at 2am. Models are easy to call. Making them reliable enough to put in front of a doctor or a lawyer is the actual work.",
