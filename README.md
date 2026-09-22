@@ -46,8 +46,6 @@ Search the repo for `TODO` — there are three:
 1. **`writing[0].href`** — paste the permalink to your LinkedIn BLE post.
 2. **`community[0].detail`** — name the actual GDG events (e.g. "DevFest
    Bhubaneswar 2024", "I/O Extended 2025"). Specific beats generic here.
-3. **`profile.siteUrl`** — set to your real domain once you have one. It drives
-   canonical URLs, the sitemap and OG tags.
 
 Two things to fix on GitHub itself, since the site pulls from the API live:
 
@@ -78,6 +76,24 @@ sign up at [resend.com](https://resend.com) and set:
 | `RESEND_API_KEY` | yes | Without it, `/api/contact` returns 503. |
 | `CONTACT_TO` | no | Defaults to `profile.email`. |
 | `CONTACT_FROM` | no | Must be a domain verified in Resend. Defaults to Resend's shared sandbox sender, which is fine for testing but will land in spam in production. |
+| `NEXT_PUBLIC_SITE_URL` | no | Only needed for a custom domain, e.g. `https://asthaniharika.com`. |
+
+### How the canonical URL is decided
+
+You don't have to hardcode a domain. [`src/lib/siteUrl.ts`](src/lib/siteUrl.ts)
+resolves it in this order:
+
+1. `NEXT_PUBLIC_SITE_URL`, if you set it
+2. `VERCEL_PROJECT_PRODUCTION_URL`, which Vercel sets for you
+3. `http://localhost:3000` for local dev
+
+So canonical tags, `sitemap.xml`, `robots.txt` and the OG card are all correct
+as soon as it deploys — and switching to a custom domain later is one
+environment variable, not a code change.
+
+It intentionally uses `VERCEL_PROJECT_PRODUCTION_URL` rather than `VERCEL_URL`:
+the latter is a unique per-deployment hostname, so every preview build would
+advertise its own canonical URL and split the SEO signal.
 
 ## Notes on how it's built
 

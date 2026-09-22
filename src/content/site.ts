@@ -11,8 +11,8 @@ export const profile = {
   location: "Bhubaneswar, India",
   email: "asthaniharika123@gmail.com",
   phone: "+91 77395 23225",
-  // Update after you buy a domain, or use the Vercel URL.
-  siteUrl: "https://asthaniharika.com",
+  // The canonical origin is resolved at build time from the environment —
+  // see src/lib/siteUrl.ts. Set NEXT_PUBLIC_SITE_URL to override it.
   resumePath: "/Astha_Niharika_Resume.pdf",
   available: true,
   availableLabel: "Open to AI / fullstack roles",

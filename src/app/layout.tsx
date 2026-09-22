@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google";
 import { profile } from "@/content/site";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,8 +27,10 @@ const display = Instrument_Serif({
 const description =
   "AI Fullstack Engineer with 3 years shipping production AI: RAG over PostgreSQL/pgvector, multi-provider LLM pipelines, and high-volume document systems across healthcare, fintech, legal-tech and government fundraising.";
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(profile.siteUrl),
+  metadataBase: new URL(siteUrl),
   title: {
     default: `${profile.name} — ${profile.role}`,
     template: `%s — ${profile.name}`,
@@ -45,12 +48,12 @@ export const metadata: Metadata = {
     "vector search",
     "Astha Niharika",
   ],
-  authors: [{ name: profile.name, url: profile.siteUrl }],
+  authors: [{ name: profile.name, url: siteUrl }],
   creator: profile.name,
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: profile.siteUrl,
+    url: siteUrl,
     siteName: `${profile.name} — Portfolio`,
     title: `${profile.name} — ${profile.role}`,
     description,
@@ -65,7 +68,7 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
-  alternates: { canonical: profile.siteUrl },
+  alternates: { canonical: siteUrl },
 };
 
 export const viewport: Viewport = {
@@ -84,7 +87,7 @@ function StructuredData() {
     name: profile.name,
     jobTitle: profile.role,
     email: profile.email,
-    url: profile.siteUrl,
+    url: siteUrl,
     address: { "@type": "PostalAddress", addressLocality: "Bhubaneswar", addressCountry: "IN" },
     sameAs: [profile.socials.github, profile.socials.linkedin],
     alumniOf: {
