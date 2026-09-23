@@ -337,8 +337,9 @@ export function Ask({ llmEnabled }: { llmEnabled: boolean }) {
                         </p>
                       ) : (
                         <p className="text-paper-dim">
-                          I couldn&apos;t find that on this site, so I won&apos;t guess. Try asking
-                          about my projects, experience or skills, or{" "}
+                          I&apos;m only set up to answer questions about me and my work, and I
+                          couldn&apos;t find that on this site, so I won&apos;t guess. Try asking about
+                          my projects, experience or skills, or{" "}
                           <a href="#contact" className="text-pen underline-offset-2 hover:underline">
                             ask me directly
                           </a>
