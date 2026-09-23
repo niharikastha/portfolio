@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ask, corpusSize, llmHits, tokenize, type AskResult } from "@/lib/retrieval";
-import type { EvalResult } from "@/lib/evals";
 import { Reveal, Section } from "./primitives";
 
 const SUGGESTIONS = [
@@ -71,57 +70,9 @@ function CitedText({ text, onCite }: { text: string; onCite: (n: number) => void
   );
 }
 
-function EvalCard({ evals }: { evals: EvalResult }) {
-  const pct = Math.round((evals.passed / evals.total) * 100);
-  return (
-    <details className="group mt-6 rounded-2xl border border-ink-700 bg-ink-900 p-5 sm:p-6">
-      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper-faint">
-            Eval · re-run on every build
-          </p>
-          <p className="mt-2 text-sm text-paper-dim">
-            {evals.total} test questions, each with the source that should come back first, plus
-            out-of-scope ones it should refuse.
-          </p>
-        </div>
-        <div className="flex items-center gap-6 font-mono text-xs">
-          <span>
-            <span className="nums text-2xl text-paper">{evals.passed}</span>
-            <span className="text-paper-faint">/{evals.total} pass ({pct}%)</span>
-          </span>
-          <span className="text-paper-faint">
-            answerable {evals.answerable.passed}/{evals.answerable.total} · refusals{" "}
-            {evals.refusals.passed}/{evals.refusals.total}
-          </span>
-          <span aria-hidden className="text-gold-400 transition-transform duration-300 group-open:rotate-90">
-            →
-          </span>
-        </div>
-      </summary>
-      {evals.failures.length ? (
-        <div className="mt-5 border-t border-ink-800 pt-4">
-          <p className="text-xs text-paper-faint">
-            Where it still gets it wrong. I&apos;m leaving these visible, since knowing where
-            retrieval fails is the point of an eval:
-          </p>
-          <ul className="mt-3 space-y-2 font-mono text-[11px]">
-            {evals.failures.map((f) => (
-              <li key={f.q} className="text-paper-dim">
-                “{f.q}” → expected <span className="text-paper">{f.expected}</span>, got{" "}
-                <span className="text-gold-400">{f.got}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </details>
-  );
-}
-
 type Mode = "keyword" | "ai";
 
-export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalResult }) {
+export function Ask({ llmEnabled }: { llmEnabled: boolean }) {
   const reduced = useReducedMotion();
   const [mode, setMode] = useState<Mode>("keyword");
   const [aiText, setAiText] = useState("");
@@ -188,164 +139,111 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
   const shown = result ? (mode === "ai" ? llmHits(result) : result.hits) : [];
   const background = shown.filter((h) => h.background).length;
 
+  const answerText = mode === "ai" ? aiText : result?.answer.map((a) => a.sentence).join(" ");
+
   return (
     <Section
       id="ask"
       title="Ask my portfolio"
-      lead="A small version of the retrieval systems I build at work, running entirely in your browser. Ask it something about me and it'll show you which passages it found, how they scored, and where each part of the answer came from. If the answer isn't on this site, it says so instead of guessing."
+      lead="Ask anything about my work, skills or experience. Answers come only from what's on this site, with a link to where each one came from."
     >
       <Reveal>
-        <div className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-900">
-          {/* Header strip */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700 px-5 py-3 font-mono text-[11px] text-paper-faint">
-            <span>
-              <span className="text-gold-400">●</span> retriever: BM25 + synonym expansion
-              {mode === "ai" ? " → Gemini" : ""}
-            </span>
-            {llmEnabled ? (
-              <div role="radiogroup" aria-label="Answer mode" className="flex gap-1">
-                {(
-                  [
-                    ["keyword", "Keyword only"],
-                    ["ai", "With Gemini"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    role="radio"
-                    aria-checked={mode === key}
-                    onClick={() => {
-                      setMode(key);
-                      if (key === "ai" && asked) void streamAnswer(asked);
-                    }}
-                    className={`rounded px-2 py-1 transition-colors duration-300 ${
-                      mode === key ? "bg-gold-400 text-ink-950" : "hover:text-paper"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            <span>
-              {corpusSize()} passages indexed from this site
-              {mode === "ai" ? " · answer written by an LLM from them" : " · no LLM"}
-            </span>
+        <div className="rounded-3xl border border-ink-700 bg-ink-900 p-4 sm:p-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(query);
+            }}
+            className="relative"
+          >
+            <label htmlFor="ask-input" className="sr-only">
+              Ask a question about Astha
+            </label>
+            <input
+              id="ask-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Type a question, like “Have you worked with RAG?”"
+              autoComplete="off"
+              className="w-full rounded-2xl border border-ink-700 bg-ink-950 py-4 pr-16 pl-5 text-base text-paper shadow-sm placeholder:text-paper-faint transition-colors duration-300 focus:border-pen focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!query.trim()}
+              aria-label="Ask"
+              className="absolute top-1/2 right-2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-pen text-[#1a0f0c] transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:scale-100"
+            >
+              <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 10h12m0 0-5-5m5 5-5 5" />
+              </svg>
+            </button>
+          </form>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="mr-1 font-hand text-base text-paper-faint">or try:</span>
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => run(s)}
+                className="rounded-full border border-ink-700 bg-ink-950 px-3 py-1.5 text-xs text-paper-dim transition-colors duration-300 hover:border-pen hover:text-pen"
+              >
+                {s}
+              </button>
+            ))}
           </div>
 
-          <div className="p-5 sm:p-7">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                run(query);
-              }}
-              className="flex flex-col gap-3 sm:flex-row"
-            >
-              <label htmlFor="ask-input" className="sr-only">
-                Ask a question about Astha
-              </label>
-              <input
-                id="ask-input"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="e.g. What have you built with pgvector?"
-                autoComplete="off"
-                className="w-full flex-1 rounded-lg border border-ink-700 bg-ink-850 px-4 py-3 text-sm text-paper placeholder:text-paper-faint transition-colors duration-300 focus:border-gold-400 focus:outline-none"
-              />
+          {llmEnabled ? (
+            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-ink-800 pt-4 text-sm">
               <button
-                type="submit"
-                disabled={!query.trim()}
-                className="rounded-lg bg-gold-400 px-5 py-3 text-sm font-semibold text-ink-950 transition-colors duration-300 hover:bg-gold-300 disabled:cursor-not-allowed disabled:opacity-40"
+                type="button"
+                role="switch"
+                aria-checked={mode === "ai"}
+                onClick={() => {
+                  const next = mode === "ai" ? "keyword" : "ai";
+                  setMode(next);
+                  if (next === "ai" && asked) void streamAnswer(asked);
+                }}
+                className="flex items-center gap-2.5 text-paper"
               >
-                Ask
+                <span
+                  className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
+                    mode === "ai" ? "bg-pen" : "bg-ink-700"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow transition-transform duration-300 ${
+                      mode === "ai" ? "translate-x-5" : ""
+                    }`}
+                  />
+                </span>
+                AI answers
               </button>
-            </form>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => run(s)}
-                  className="rounded-full border border-ink-700 px-3 py-1.5 text-xs text-paper-dim transition-colors duration-300 hover:border-gold-400 hover:text-gold-400"
-                >
-                  {s}
-                </button>
-              ))}
+              <span className="text-xs text-paper-faint">
+                {mode === "ai"
+                  ? "Gemini writes the answer, using only passages from this site."
+                  : "Off: answers are quoted straight from the site, no AI."}
+              </span>
             </div>
+          ) : null}
 
-            <AnimatePresence mode="wait">
-              {result ? (
-                <motion.div
-                  key={runId}
-                  initial={reduced ? undefined : { opacity: 0 }}
-                  animate={reduced ? undefined : { opacity: 1 }}
-                  exit={reduced ? undefined : { opacity: 0 }}
-                  className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.15fr]"
-                >
-                  {/* Pipeline trace */}
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper-faint">
-                      What happened
-                    </p>
-                    <ol className="mt-4 space-y-4 border-l border-ink-700 pl-5 text-sm">
-                      <motion.li {...step(0)}>
-                        <p className="text-paper-dim">1. Split your question into search terms</p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {result.queryTerms.length ? (
-                            result.queryTerms.map((t) => <Chip key={t}>{t}</Chip>)
-                          ) : (
-                            <span className="text-xs text-paper-faint">(nothing searchable)</span>
-                          )}
-                        </div>
-                      </motion.li>
-                      <motion.li {...step(1)}>
-                        <p className="text-paper-dim">2. Added related terms, weighted at half</p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {result.expandedTerms.length ? (
-                            result.expandedTerms.map((t) => (
-                              <Chip key={t} dim>
-                                {t}
-                              </Chip>
-                            ))
-                          ) : (
-                            <span className="text-xs text-paper-faint">(none needed)</span>
-                          )}
-                        </div>
-                      </motion.li>
-                      <motion.li {...step(2)}>
-                        <p className="text-paper-dim">
-                          3. Scored all {result.corpusSize} passages with BM25 and{" "}
-                          {result.hits.length
-                            ? `kept the top ${result.hits.length}`
-                            : "found no matches"}
-                        </p>
-                        <p className="nums mt-1 text-xs text-paper-faint">
-                          took {result.ms < 1 ? "<1" : result.ms.toFixed(1)} ms
-                        </p>
-                      </motion.li>
-                      <motion.li {...step(3)}>
-                        <p className="text-paper-dim">
-                          4.{" "}
-                          {mode === "ai"
-                            ? background
-                              ? `The match was weak, so it added ${background} general passages about me and sent all ${shown.length} to Gemini, told to answer only from them and to refuse if they don't cover it`
-                              : `Sent those ${shown.length} passages to Gemini, told to answer only from them and cite each one`
-                            : result.answer.length
-                              ? "Built the answer from the best-matching sentences, with sources"
-                              : "Nothing matched well enough, so it didn't answer"}
-                        </p>
-                      </motion.li>
-                    </ol>
-                  </div>
-
-                  {/* Answer + sources */}
-                  <motion.div {...step(4)}>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper-faint">
-                      Answer to “{asked}”
-                    </p>
-                    <div className="mt-4 rounded-xl border border-ink-700 bg-ink-850 p-5 text-sm leading-relaxed text-paper">
+          <AnimatePresence mode="wait">
+            {result ? (
+              <motion.div
+                key={runId}
+                initial={reduced ? undefined : { opacity: 0, y: 6 }}
+                animate={reduced ? undefined : { opacity: 1, y: 0 }}
+                exit={reduced ? undefined : { opacity: 0 }}
+                className="mt-6"
+              >
+                {/* The answer, as a chat reply */}
+                <div className="flex gap-3">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pen/15 font-hand text-sm font-bold text-pen">
+                    A
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-paper-faint">You asked: “{asked}”</p>
+                    <div className="mt-2 rounded-2xl rounded-tl-sm bg-ink-850 p-5 text-[15px] leading-relaxed text-paper">
                       {mode === "ai" ? (
                         <p aria-live="polite" className="whitespace-pre-wrap">
                           {aiText ? (
@@ -354,7 +252,7 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
                             <span className="text-paper-faint">Thinking…</span>
                           )}
                           {aiState === "streaming" && aiText ? (
-                            <span aria-hidden className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-gold-400 align-middle" />
+                            <span aria-hidden className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-pen align-middle" />
                           ) : null}
                         </p>
                       ) : result.answer.length ? (
@@ -366,7 +264,7 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
                                 type="button"
                                 onClick={() => setFocused(a.cite)}
                                 aria-label={`Show source ${a.cite}`}
-                                className="nums align-super text-[10px] text-gold-400 hover:underline"
+                                className="nums align-super text-[10px] text-pen hover:underline"
                               >
                                 [{a.cite}]
                               </button>{" "}
@@ -377,7 +275,7 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
                         <p className="text-paper-dim">
                           I couldn&apos;t find that on this site, so I won&apos;t guess. Try asking
                           about my projects, experience or skills, or{" "}
-                          <a href="#contact" className="text-gold-400 underline-offset-2 hover:underline">
+                          <a href="#contact" className="text-pen underline-offset-2 hover:underline">
                             ask me directly
                           </a>
                           .
@@ -385,58 +283,106 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
                       )}
                     </div>
 
-                    {shown.length ? (
-                      <ul className="mt-4 space-y-2">
-                        {shown.map((hit, i) => (
-                          <li
-                            key={hit.chunk.id}
-                            className={`rounded-xl border p-4 transition-colors duration-300 ${
-                              focused === i + 1
-                                ? "border-gold-400 bg-ink-850"
-                                : "border-ink-700"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between gap-3 font-mono text-[11px]">
-                              <span className="text-paper-dim">
-                                <span className="text-gold-400">[{i + 1}]</span> {hit.chunk.source}
-                              </span>
-                              <span className="nums text-paper-faint">
-                                {hit.background ? "background" : hit.score.toFixed(2)}
-                              </span>
-                            </div>
-                            <div className="mt-2 h-1 overflow-hidden rounded-full bg-ink-800">
-                              <motion.div
-                                className="h-full rounded-full bg-gold-400"
-                                initial={reduced ? false : { width: 0 }}
-                                animate={{ width: `${(hit.score / top) * 100}%` }}
-                                transition={{ delay: 0.8 + i * 0.1, duration: 0.5 }}
-                              />
-                            </div>
-                            <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-paper-dim">
-                              <Highlighted text={hit.chunk.text} terms={hit.matched} />
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
+                    {answerText && shown.length ? (
+                      <p className="mt-2 text-xs text-paper-faint">
+                        The small numbers like [1] point to the sources below.
+                      </p>
                     ) : null}
-                  </motion.div>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
+
+                    {shown.length ? (
+                      <details className="group mt-4" open={focused !== null || undefined}>
+                        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium text-paper-dim transition-colors hover:text-paper">
+                          <span aria-hidden className="transition-transform duration-300 group-open:rotate-90">
+                            ›
+                          </span>
+                          Sources ({shown.length}) and how it found them
+                        </summary>
+
+                        <ol className="mt-4 space-y-2 border-l-2 border-ink-700 pl-4 text-xs text-paper-dim">
+                          <li>
+                            <span className="text-paper">1. Picked out key words:</span>{" "}
+                            {result.queryTerms.length ? (
+                              <span className="inline-flex flex-wrap gap-1 align-middle">
+                                {result.queryTerms.map((t) => (
+                                  <Chip key={t}>{t}</Chip>
+                                ))}
+                                {result.expandedTerms.map((t) => (
+                                  <Chip key={t} dim>
+                                    {t}
+                                  </Chip>
+                                ))}
+                              </span>
+                            ) : (
+                              "(nothing searchable)"
+                            )}
+                          </li>
+                          <li>
+                            <span className="text-paper">2. Searched {result.corpusSize} passages</span>{" "}
+                            from this site with BM25 keyword ranking (
+                            {result.ms < 1 ? "<1" : result.ms.toFixed(1)} ms).
+                          </li>
+                          <li>
+                            <span className="text-paper">3. </span>
+                            {mode === "ai"
+                              ? background
+                                ? `The match was weak, so it added ${background} general passages about me, then Gemini wrote the answer from them.`
+                                : "Gemini wrote the answer from the best matches, citing each one."
+                              : result.answer.length
+                                ? "Quoted the best-matching sentences."
+                                : "Nothing matched well enough, so it didn't answer."}
+                          </li>
+                        </ol>
+
+                        <ul className="mt-4 space-y-2">
+                          {shown.map((hit, i) => (
+                            <li
+                              key={hit.chunk.id}
+                              className={`rounded-xl border p-4 transition-colors duration-300 ${
+                                focused === i + 1 ? "border-pen bg-ink-850" : "border-ink-700"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-3 text-xs">
+                                <span className="font-medium text-paper">
+                                  <span className="nums mr-1 text-pen">[{i + 1}]</span> {hit.chunk.source}
+                                </span>
+                                <span className="flex items-center gap-2 text-paper-faint">
+                                  {hit.background ? (
+                                    "background"
+                                  ) : (
+                                    <>
+                                      <span className="h-1.5 w-16 overflow-hidden rounded-full bg-ink-800">
+                                        <motion.span
+                                          className="block h-full rounded-full bg-pen"
+                                          initial={reduced ? false : { width: 0 }}
+                                          animate={{ width: `${(hit.score / top) * 100}%` }}
+                                          transition={{ delay: 0.2 + i * 0.08, duration: 0.5 }}
+                                        />
+                                      </span>
+                                      match
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                              <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-paper-dim">
+                                <Highlighted text={hit.chunk.text} terms={hit.matched} />
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : null}
+                  </div>
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
 
-        <EvalCard evals={evals} />
-
         <p className="mt-4 text-xs leading-relaxed text-paper-faint">
-          {llmEnabled
-            ? "Keyword mode only quotes this site. \"With Gemini\" sends the same retrieved passages to an LLM that is told to answer only from them, so the citations still point at real text. "
-            : "This demo only does keyword retrieval, so it can quote this site but not reason beyond it. "}
-          The production systems I work on add pgvector embeddings and hybrid dense + sparse search
-          on top.{" "}
+          Built like the retrieval systems I work on, at a smaller scale.{" "}
           <Link
             href="/work/this-site"
-            className="link-underline text-gold-400 transition-colors duration-300 hover:text-gold-300"
+            className="link-underline text-pen transition-colors duration-300 hover:text-paper"
           >
             How this works →
           </Link>

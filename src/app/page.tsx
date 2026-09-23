@@ -13,7 +13,6 @@ import { BackToTop } from "@/components/BackToTop";
 import { Ask } from "@/components/Ask";
 import { Gallery } from "@/components/Gallery";
 import { getGalleryPhotos } from "@/lib/gallery";
-import { runEvals } from "@/lib/evals";
 import { publicFileExists } from "@/lib/publicFile";
 import { profile } from "@/content/site";
 
@@ -30,7 +29,7 @@ export default function Home() {
       />
       <main id="main">
         <Hero />
-        <Ask llmEnabled={llmEnabled} evals={runEvals()} />
+        <Ask llmEnabled={llmEnabled} />
         <Work />
         <Experience />
         <About />
