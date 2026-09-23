@@ -194,6 +194,27 @@ export type CaseStudy = {
   testing?: { status: string; plan: string[] };
   /** Files in /public/work/<slug>/. Missing files are skipped. */
   screenshots?: { file: string; caption: string }[];
+  /**
+   * System sketches drawn by ArchitectureDiagram. Nodes sit on a grid by column
+   * and row; keep labels and notes short (about 20 characters) so they fit.
+   */
+  diagrams?: {
+    title: string;
+    caption: string;
+    nodes: {
+      id: string;
+      label: string;
+      note?: string;
+      col: number;
+      row: number;
+      /** box (default), db, ext (a third-party service), user, or tool. */
+      shape?: "box" | "db" | "ext" | "user" | "tool";
+      ai?: boolean;
+    }[];
+    edges: { from: string; to: string; label?: string; dashed?: boolean; both?: boolean }[];
+  }[];
+  /** How much survives each stage. `n` sets the bar width, `value` is what's shown. */
+  funnel?: { n: number; value: string; label: string; note?: string }[];
 };
 
 export const projects: Project[] = [
@@ -234,6 +255,50 @@ export const projects: Project[] = [
         { label: "Score", note: "Claude Haiku, prompt-cached · 7 AM", ai: true },
         { label: "Tailor resume", note: "Claude Opus, fact-checked, fails closed", ai: true },
         { label: "Digest", note: "Pay gate, then email + Telegram by 9 AM" },
+      ],
+      funnel: [
+        { n: 16500, value: "16,500", label: "postings fetched", note: "6 hiring platforms, 6 AM" },
+        { n: 1650, value: "~1,650", label: "survive the free screen", note: "rules drop ~90%, with reasons" },
+        { n: 60, value: "60", label: "go to Claude Haiku", note: "the pgvector top 60" },
+        { n: 15, value: "~15", label: "tailored resumes a day", note: "Claude Opus, STRONG and GOOD only" },
+      ],
+      diagrams: [
+        {
+          title: "JobPilot architecture",
+          caption:
+            "A Nest worker does the daily run on BullMQ jobs; the API and the Next.js dashboard are where I review matches. It fills in applications but never presses submit.",
+          nodes: [
+            { id: "boards", label: "Job platforms", note: "Ashby, Lever +4", col: 0, row: 0, shape: "ext" },
+            { id: "worker", label: "Nest worker", note: "BullMQ jobs", col: 1, row: 0 },
+            { id: "screen", label: "Screen + vector", note: "free rules, bge-small", col: 2, row: 0 },
+            { id: "haiku", label: "Claude Haiku", note: "scores fit, cached", col: 3, row: 0, shape: "ext", ai: true },
+            { id: "digest", label: "Email + Telegram", note: "digest by 9 AM", col: 4, row: 0, shape: "ext" },
+            { id: "cron", label: "Cron", note: "6 · 7 · 9 AM", col: 1, row: 1 },
+            { id: "redis", label: "Redis", note: "the job queues", col: 0, row: 1, shape: "db" },
+            { id: "pg", label: "Postgres", note: "+ pgvector", col: 2, row: 1, shape: "db" },
+            { id: "opus", label: "Claude Opus", note: "tailors, fact-checked", col: 3, row: 1, shape: "ext", ai: true },
+            { id: "autofill", label: "Playwright", note: "fills, doesn't submit", col: 0, row: 2 },
+            { id: "api", label: "NestJS API", note: "jobs, matches", col: 2, row: 2 },
+            { id: "web", label: "Next.js dashboard", note: "review + apply", col: 3, row: 2 },
+            { id: "me", label: "Me", note: "reads, decides", col: 4, row: 2, shape: "user" },
+          ],
+          edges: [
+            { from: "boards", to: "worker", label: "fetch" },
+            { from: "cron", to: "worker", label: "triggers" },
+            { from: "redis", to: "worker", dashed: true, both: true },
+            { from: "worker", to: "screen" },
+            { from: "screen", to: "pg", label: "embeddings", both: true },
+            { from: "screen", to: "haiku", label: "top 60" },
+            { from: "haiku", to: "digest", label: "shortlist" },
+            { from: "haiku", to: "opus", label: "STRONG · GOOD" },
+            { from: "opus", to: "pg", label: "variant" },
+            { from: "digest", to: "me" },
+            { from: "me", to: "web" },
+            { from: "web", to: "api" },
+            { from: "api", to: "pg", both: true },
+            { from: "api", to: "autofill", label: "autofill" },
+          ],
+        },
       ],
       decisions: [
         {
@@ -340,6 +405,60 @@ export const projects: Project[] = [
         { label: "Translate", note: "Into the user's own language", ai: true },
         { label: "Ask", note: "An agent searches all your documents", ai: true },
       ],
+      diagrams: [
+        {
+          title: "KlarText architecture",
+          caption:
+            "Analysis runs in the background after upload; chat is a separate agent that reads the same Postgres through tools. Each provider sits behind one file, so either can be swapped.",
+          nodes: [
+            { id: "user", label: "You", note: "upload, ask", col: 0, row: 1, shape: "user" },
+            { id: "web", label: "Next.js web", note: "docs, calendar, chat", col: 1, row: 1 },
+            { id: "api", label: "NestJS API", note: "JWT, REST + SSE", col: 2, row: 1 },
+            { id: "parse", label: "pdf-parse", note: "text PDFs", col: 2, row: 0 },
+            { id: "analysis", label: "Analysis agent", note: "summary, risk, dates", col: 3, row: 0, ai: true },
+            { id: "gemini", label: "Gemini", note: "reads photos too", col: 4, row: 0, shape: "ext", ai: true },
+            { id: "pg", label: "PostgreSQL", note: "docs, tasks, events", col: 3, row: 1, shape: "db" },
+            { id: "chat", label: "Chat agent", note: "≤ 4 rounds, 5 tools", col: 3, row: 2, ai: true },
+            { id: "groq", label: "Groq", note: "fast enough to stream", col: 4, row: 2, shape: "ext", ai: true },
+          ],
+          edges: [
+            { from: "user", to: "web", both: true },
+            { from: "web", to: "api", label: "REST + SSE", both: true },
+            { from: "api", to: "analysis", label: "upload" },
+            { from: "analysis", to: "parse", dashed: true },
+            { from: "analysis", to: "gemini", both: true },
+            { from: "analysis", to: "pg", label: "results" },
+            { from: "api", to: "pg", both: true },
+            { from: "api", to: "chat", label: "question" },
+            { from: "chat", to: "pg", label: "tools read", dashed: true },
+            { from: "chat", to: "groq", both: true },
+          ],
+        },
+        {
+          title: "The Ask AI tool loop",
+          caption:
+            "The model picks a tool, reads the result and decides again, for up to 4 rounds. Every tool call is streamed to the screen as it happens, and the answer cites the documents it used.",
+          nodes: [
+            { id: "q", label: "Your question", note: "any of your letters", col: 0, row: 0, shape: "user" },
+            { id: "model", label: "Groq model", note: "picks the next tool", col: 2, row: 0, ai: true },
+            { id: "a", label: "Answer", note: "streamed, with sources", col: 4, row: 0 },
+            { id: "t1", label: "list_my_documents", col: 0, row: 1, shape: "tool" },
+            { id: "t2", label: "list_my_action_items", col: 1, row: 1, shape: "tool" },
+            { id: "t3", label: "search_documents", col: 2, row: 1, shape: "tool" },
+            { id: "t4", label: "get_document_details", col: 3, row: 1, shape: "tool" },
+            { id: "t5", label: "get_full_document_text", col: 4, row: 1, shape: "tool" },
+          ],
+          edges: [
+            { from: "q", to: "model" },
+            { from: "model", to: "a", label: "done" },
+            { from: "model", to: "t1", dashed: true, both: true },
+            { from: "model", to: "t2", dashed: true, both: true },
+            { from: "model", to: "t3", label: "≤ 4 rounds", dashed: true, both: true },
+            { from: "model", to: "t4", dashed: true, both: true },
+            { from: "model", to: "t5", dashed: true, both: true },
+          ],
+        },
+      ],
       decisions: [
         {
           title: "Not making things up mattered most",
@@ -437,6 +556,35 @@ export const projects: Project[] = [
         { label: "Threshold", note: "Weak match → refuse, or add background for the LLM" },
         { label: "Answer", note: "Gemini, only from the top passages", ai: true },
         { label: "Cite", note: "Every claim links to its passage" },
+      ],
+      diagrams: [
+        {
+          title: "How the Ask box answers",
+          caption:
+            "With AI off, everything happens in the browser. With AI on, the server re-runs the same retrieval instead of trusting the browser, and Gemini only sees those passages.",
+          nodes: [
+            { id: "v", label: "Visitor", note: "asks a question", col: 0, row: 0, shape: "user" },
+            { id: "bm25", label: "BM25", note: "in the browser", col: 1, row: 0 },
+            { id: "gate", label: "Good match?", note: "weak → say so", col: 2, row: 0 },
+            { id: "kw", label: "Keyword answer", note: "passages + scores", col: 3, row: 0 },
+            { id: "route", label: "/api/ask", note: "caps, rate limits", col: 1, row: 1 },
+            { id: "bm25s", label: "BM25 again", note: "on the server", col: 2, row: 1 },
+            { id: "gemini", label: "Gemini Flash", note: "only these passages", col: 3, row: 1, shape: "ext", ai: true },
+            { id: "cited", label: "Cited answer", note: "streamed, [n] links", col: 4, row: 1 },
+            { id: "content", label: "Site content", note: "every passage", col: 2, row: 2, shape: "db" },
+          ],
+          edges: [
+            { from: "v", to: "bm25", label: "AI off" },
+            { from: "bm25", to: "gate" },
+            { from: "gate", to: "kw" },
+            { from: "v", to: "route", label: "AI on" },
+            { from: "route", to: "bm25s" },
+            { from: "bm25s", to: "gemini", label: "top passages" },
+            { from: "gemini", to: "cited" },
+            { from: "content", to: "bm25s" },
+            { from: "content", to: "bm25", dashed: true },
+          ],
+        },
       ],
       decisions: [
         {

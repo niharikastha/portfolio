@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { profile, projects } from "@/content/site";
+import { ArchitectureDiagram, Funnel } from "@/components/ArchitectureDiagram";
 import { PipelineDiagram } from "@/components/PipelineDiagram";
 import { RichText } from "@/components/primitives";
 import { TechStack } from "@/components/TechStack";
@@ -163,6 +164,35 @@ export default async function CaseStudyPage({ params }: { params: Promise<Params
             ))}
           </ul>
         </section>
+
+        {cs.funnel?.length ? (
+          <section className="mt-14">
+            <Heading>What survives each stage</Heading>
+            <div className="rule-fade mt-5" />
+            <p className="mt-5 -rotate-1 font-hand text-lg text-pen">each stage is cheaper than the next one ↓</p>
+            <div className="mt-4">
+              <Funnel stages={cs.funnel} />
+            </div>
+          </section>
+        ) : null}
+
+        {cs.diagrams?.length ? (
+          <section className="mt-14">
+            <Heading>Architecture</Heading>
+            <div className="rule-fade mt-5" />
+            {/* Diagrams are wide, so they break out of the text column on large screens. */}
+            <div className="mt-6 space-y-10 xl:-mx-24">
+              {cs.diagrams.map((d, i) => (
+                <div key={d.title}>
+                  {cs.diagrams!.length > 1 ? (
+                    <h3 className="mb-3 font-medium text-paper">{d.title}</h3>
+                  ) : null}
+                  <ArchitectureDiagram diagram={d} id={`${project.slug}-${i}`} />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="mt-14">
           <Heading>Decisions and why</Heading>
