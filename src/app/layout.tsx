@@ -134,7 +134,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Popup-blocker extensions hijack the first <head> script (swap in a src, clear its body). */}
+        <script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/*
           Scroll-reveal sections are server-rendered with inline opacity:0 and
           only animate once framer-motion hydrates. If JS never arrives, this
