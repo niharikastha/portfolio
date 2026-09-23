@@ -410,7 +410,7 @@ export const projects: Project[] = [
         { label: "Question", note: "Typed or picked from suggestions" },
         { label: "Tokenise + expand", note: "Stopwords, stemming, synonyms at half weight" },
         { label: "BM25", note: "Scores every passage on the site" },
-        { label: "Threshold", note: "Weak best match → refuse, don't guess" },
+        { label: "Threshold", note: "Weak match → refuse, or add background for the LLM" },
         { label: "Answer", note: "Gemini, only from the top passages", ai: true },
         { label: "Cite", note: "Every claim links to its passage" },
       ],

@@ -6,13 +6,19 @@ import { ask, llmHits } from "@/lib/retrieval";
  * Gemini only writes the answer from those passages.
  *
  * Env: GEMINI_API_KEY (required; a free key from aistudio.google.com works),
- * GEMINI_MODEL (optional, defaults to gemini-3.6-flash), ASK_DAILY_LIMIT
- * (optional, defaults to 300 questions a day).
+ * GEMINI_MODEL (optional, defaults to gemini-3.6-flash), GEMINI_FALLBACKS
+ * (optional, comma-separated, tried when the main model is overloaded),
+ * ASK_DAILY_LIMIT (optional, defaults to 300 questions a day).
  */
 
 export const runtime = "nodejs";
 
 const MODEL = process.env.GEMINI_MODEL ?? "gemini-3.6-flash";
+const FALLBACKS = (process.env.GEMINI_FALLBACKS ?? "gemini-3.5-flash,gemini-3.5-flash-lite")
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+const RETRYABLE = new Set([429, 500, 503]);
 const MAX_QUESTION = 300;
 
 // Best-effort in-memory limits, same idea as the contact route. They reset on
@@ -42,7 +48,7 @@ function overDailyCap() {
 
 const SYSTEM = `You answer questions about Astha Niharika, a software engineer, for visitors to their portfolio site.
 
-You will be given numbered passages taken from the site. Answer only from those passages. General questions (who you are, what you do, where you work) and greetings are fine to answer from the passages that describe Astha. If the passages don't contain the answer, say you couldn't find it on the site and suggest using the contact form; don't fill gaps from general knowledge, and don't guess at things like salary, age or personal life.
+You will be given numbered passages taken from the site. Answer only from those passages. General questions (who you are, what you do, where you work) and greetings are fine to answer from the passages that describe Astha. If the passages don't contain the answer, say you couldn't find it on the site and suggest using the contact form, with no citation; don't fill gaps from general knowledge, and don't guess at things like salary, age or personal life.
 
 Write two to four plain sentences in the first person, as Astha ("I built..."). After each claim, cite the passage it came from as [1], [2] and so on. No headings, lists or markdown. Keep numbers exactly as the passages state them.`;
 
@@ -88,37 +94,43 @@ export async function POST(req: Request) {
   const passages = found.map((h, i) => `[${i + 1}] (${h.chunk.source}) ${h.chunk.text}`).join("\n\n");
 
   const encoder = new TextEncoder();
-  const upstream = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM }] },
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `<passages>\n${passages}\n</passages>\n\nQuestion: ${question}` }],
-          },
-        ],
-        // Room for the model's thinking plus a short answer.
-        generationConfig: { maxOutputTokens: 1024, temperature: 0.2 },
-      }),
-    },
-  ).catch((err: unknown) => {
-    console.error("ask route:", err);
-    return null;
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: SYSTEM }] },
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: `<passages>\n${passages}\n</passages>\n\nQuestion: ${question}` }],
+      },
+    ],
+    // Low thinking keeps the answer from being starved of output tokens.
+    generationConfig: { maxOutputTokens: 1024, temperature: 0.2, thinkingConfig: { thinkingLevel: "low" } },
   });
 
+  // The free tier often answers 503 "high demand" or 429 for a moment. Try the
+  // main model twice, then each fallback once, before giving up.
+  let upstream: Response | null = null;
+  for (const [i, model] of [MODEL, MODEL, ...FALLBACKS].entries()) {
+    if (i === 1) await new Promise((r) => setTimeout(r, 800));
+    upstream = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`,
+      { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, body },
+    ).catch((err: unknown) => {
+      console.error("ask route:", err);
+      return null;
+    });
+    if (upstream?.ok || (upstream && !RETRYABLE.has(upstream.status))) break;
+  }
+
   if (!upstream?.ok || !upstream.body) {
-    if (upstream && upstream.status !== 429) {
+    const busy = !upstream || RETRYABLE.has(upstream.status);
+    if (upstream && !busy) {
       console.error("ask route:", upstream.status, await upstream.text().catch(() => ""));
     }
     return text(
-      upstream?.status === 429
+      busy
         ? "AI mode is busy right now. Try again in a minute."
         : "AI mode ran into a problem. The keyword answer above still works.",
-      upstream?.status === 429 ? 429 : 502,
+      busy ? 503 : 502,
     );
   }
 
