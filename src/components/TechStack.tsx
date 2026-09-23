@@ -21,10 +21,10 @@ export function TechStack({
       {items.map((name, i) => {
         const mark = techMark(name);
         return (
-          <li key={name} className="group relative">
+          <li key={name} className="group/chip relative">
             <span
-              className={`${box} flex items-center justify-center rounded-full border border-ink-700 bg-ink-900 text-paper shadow-[0_1px_0_var(--color-ink-700)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:border-ink-600 group-hover:bg-ink-850 ${
-                i % 3 === 1 ? "group-hover:-rotate-6" : "group-hover:rotate-6"
+              className={`${box} flex items-center justify-center rounded-full border border-ink-700 bg-ink-900 text-paper shadow-[0_1px_0_var(--color-ink-700)] transition-all duration-300 group-hover/chip:-translate-y-0.5 group-hover/chip:border-ink-600 group-hover/chip:bg-ink-850 ${
+                i % 3 === 1 ? "group-hover/chip:-rotate-6" : "group-hover/chip:rotate-6"
               }`}
             >
               {mark.kind === "logo" ? (
@@ -48,7 +48,7 @@ export function TechStack({
             {/* Hover label */}
             <span
               aria-hidden
-              className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-md bg-paper px-2 py-1 font-mono text-[10px] font-medium text-ink-950 opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100"
+              className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-md bg-paper px-2 py-1 font-mono text-[10px] font-medium text-ink-950 opacity-0 shadow-lg transition-all duration-200 group-hover/chip:translate-y-0 group-hover/chip:opacity-100"
             >
               {name}
               <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-paper" />

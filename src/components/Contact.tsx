@@ -139,6 +139,7 @@ export function Contact() {
                 ["Phone", profile.phone, `tel:${profile.phone.replace(/\s/g, "")}`],
                 ["LinkedIn", "in/niharika-astha", profile.socials.linkedin],
                 ["GitHub", `@${profile.githubUsername}`, profile.socials.github],
+                ["Instagram", "@astha_niharika_20", profile.socials.instagram],
                 ["Location", profile.location, null],
               ].map(([label, value, href]) => (
                 <div

@@ -100,7 +100,7 @@ function StructuredData() {
     email: profile.email,
     url: siteUrl,
     address: { "@type": "PostalAddress", addressLocality: "Bhubaneswar", addressCountry: "IN" },
-    sameAs: [profile.socials.github, profile.socials.linkedin],
+    sameAs: [profile.socials.github, profile.socials.linkedin, profile.socials.instagram],
     alumniOf: {
       "@type": "CollegeOrUniversity",
       name: "Veer Surendra Sai University of Technology",

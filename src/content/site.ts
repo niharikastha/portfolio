@@ -74,6 +74,7 @@ export const profile = {
   socials: {
     github: "https://github.com/niharikastha",
     linkedin: "https://www.linkedin.com/in/niharika-astha/",
+    instagram: "https://www.instagram.com/astha_niharika_20/",
     email: "mailto:asthaniharika123@gmail.com",
   },
   githubUsername: "niharikastha",

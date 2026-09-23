@@ -35,8 +35,8 @@
 /*
  * Light theme. Every utility reads these tokens as CSS variables, so swapping
  * them here re-colours the whole site. Deliberately not cream + amber: a cool
- * white with a cobalt accent, so light mode has its own identity. The "gold"
- * tokens are the accent slot, so in light mode they hold the blue.
+ * white with a peach accent to match the handwriting. The "gold" tokens are
+ * the accent slot, so in light mode they hold a deeper peach that reads on white.
  */
 :root[data-theme="light"] {
   --color-ink-950: #ffffff;
@@ -50,15 +50,15 @@
   --color-paper-dim: #454b55;
   --color-paper-faint: #626974;
 
-  --color-gold-300: #1e40af;
-  --color-gold-400: #1d4ed8;
-  --color-gold-500: #2563eb;
+  --color-gold-300: #b8503b;
+  --color-gold-400: #d15f48;
+  --color-gold-500: #e27a63;
 
-  --color-sky-soft: #0e7490;
+  --color-sky-soft: #9a5a44;
 
   /* Same peach as dark mode, a shade deeper so small handwriting stays readable on white */
   --color-pen: #f0725e;
-  --color-marker: rgb(255 214 10 / 0.5);
+  --color-marker: rgb(255 170 140 / 0.45);
 
   color-scheme: light;
 }
