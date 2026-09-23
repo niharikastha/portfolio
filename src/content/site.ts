@@ -25,7 +25,7 @@ export const profile = {
   noticePeriod: "", // TODO: e.g. "30 days"
 
   // One line about what you're working on right now. Empty string hides it.
-  now: "Adding an LLM mode to the Ask my portfolio demo on this site",
+  now: "Replacing KlarText's substring search with clause-level chunks and hybrid retrieval: Postgres full-text + embeddings, merged with reciprocal rank fusion",
   nowUpdated: "Sep 2026",
 
   // Hero
@@ -151,12 +151,23 @@ export type Project = {
 };
 
 export type CaseStudy = {
+  /**
+   * Live demo and/or recording. TODO: fill in when ready. `video` is a file in
+   * /public/work/<slug>/ (mp4/webm) or a YouTube/Loom URL. While both are empty
+   * the page shows a dashed placeholder in dev and nothing in production.
+   */
+  demo?: { liveUrl?: string; video?: string };
   /** The pipeline, in order. `note` is the short label under each step. */
   pipeline: { label: string; note: string; ai?: boolean }[];
   decisions: { title: string; body: string }[];
-  // TODO: these two are yours to write; each section hides while empty.
-  whatBroke?: string[];
-  nextTime?: string[];
+  /** "Why this and not that", one line per tool. */
+  techChoices?: { tech: string; why: string }[];
+  /** Honest limitations: what's broken, missing or not production-grade yet. */
+  knownGaps?: string[];
+  /** How to make the answers better: retrieval, RAG and agent improvements. */
+  improvements?: { title: string; body: string }[];
+  /** Be honest here — "none yet" plus a plan beats a vague claim. */
+  testing?: { status: string; plan: string[] };
   /** Files in /public/work/<slug>/. Missing files are skipped. */
   screenshots?: { file: string; caption: string }[];
 };
@@ -194,24 +205,28 @@ export const projects: Project[] = [
     caseStudy: {
       pipeline: [
         { label: "Fetch", note: "16,500 postings from 6 platforms · 6 AM" },
-        { label: "Rule filters", note: "~90% dropped before any paid call" },
-        { label: "Embed + match", note: "Local embeddings, pgvector similarity" },
-        { label: "Rank", note: "Claude with prompt caching · 7 AM", ai: true },
-        { label: "Tailor resume", note: "Fact check against the real resume", ai: true },
-        { label: "Shortlist", note: "Email + Telegram by 9 AM · stops before submit" },
+        { label: "Screen", note: "Free rule checks drop ~90%, each with a reason" },
+        { label: "Vector shortlist", note: "Local embeddings + pgvector pick the top 60" },
+        { label: "Score", note: "Claude Haiku, prompt-cached · 7 AM", ai: true },
+        { label: "Tailor resume", note: "Claude Opus, fact-checked, fails closed", ai: true },
+        { label: "Digest", note: "Pay gate, then email + Telegram by 9 AM" },
       ],
       decisions: [
         {
           title: "Cheap filters before the model",
-          body: "Most postings are obviously a bad fit. Plain rule-based filters throw out about 90% of them, so paid model calls only go to the ones that are actually close.",
+          body: "Most postings are obviously a bad fit. A free, deterministic screen (title, dealbreakers, years of experience, location, freshness, already applied) throws out about 90% of them, and every rejection is logged with a named reason so I can see which rule is doing the work.",
         },
         {
-          title: "Embeddings for similarity, the LLM for judgement",
-          body: "Local embeddings and pgvector handle 'is this roughly my kind of job'. Claude is only asked the harder question of how well it fits, and prompt caching keeps the repeated context (my resume, my preferences) cheap.",
+          title: "Embeddings cap the spend, the LLM judges fit",
+          body: "Vector similarity is used as a budget, not a verdict: topical overlap isn't fit. pgvector orders what survived the screen and only the 60 most plausible go to Claude, which is asked the harder question of how well each one fits.",
         },
         {
-          title: "A fact check on tailored resumes",
-          body: "A tailored resume that invents a skill is worse than an untailored one. Each rewrite is checked against the source resume so the model can reword and reorder, but not add.",
+          title: "A fact check that fails closed",
+          body: "A tailored resume that invents a skill is worse than an untailored one. The model can only return rewrites of existing bullets (there's nowhere in the schema to put a new one), and a separate check rejects any number, technology or employer that isn't in the source. If anything fails, the whole variant is thrown away and the base resume is used.",
+        },
+        {
+          title: "A short digest people keep reading",
+          body: "WEAK and REJECT matches never reach the digest, only STRONG, GOOD and BORDERLINE. A digest full of noise teaches you to ignore it. Pay works the same way: a stated salary below my floor rejects, but an AI estimate below it doesn't, and unknown pay passes.",
         },
         {
           title: "A human stays in the loop",
@@ -222,6 +237,56 @@ export const projects: Project[] = [
           body: "Fetching, ranking and sending are timed jobs (6, 7 and 9 AM) built on BullMQ and Redis, so the shortlist is waiting in the morning without me starting anything.",
         },
       ],
+      techChoices: [
+        { tech: "Claude Haiku for scoring", why: "Scoring is high-volume rubric classification. Haiku does it at about a fifth of the price, which is the difference between a daily run I can afford to leave on and one I'd switch off." },
+        { tech: "Claude Opus for tailoring", why: "There are only about 15 tailored resumes a day, and an overstated one can cost an application. That's where the stronger model is worth paying for." },
+        { tech: "Local embeddings (bge-small)", why: "A 384-dimension model that runs inside the app, so embedding thousands of postings costs nothing and keeps working when an API is down." },
+        { tech: "pgvector", why: "Vector search inside the Postgres I already had, so there's no second database to run or keep in sync." },
+        { tech: "Prompt caching", why: "The resume and preferences are the same for every posting, so they sit at the front of the prompt and are cached across calls." },
+        { tech: "Pure stage functions", why: "The screen, the pay gate and the fact check are plain functions with no I/O, so they're cheap to run on everything and easy to test." },
+      ],
+      knownGaps: [
+        "The fact check only knows technologies in its dictionary, so a tool it has never heard of can slip through. It also can't catch overstatement without numbers ('led' instead of 'contributed to'); that's what the human review before submitting is for.",
+        "Title rules match substrings, so excluding 'intern' also excludes 'internal tools engineer'.",
+        "Structured salary appears on only about 0.3% of Indian postings, so pay is mostly inferred from company tier rather than read.",
+        "Prompt caching needs a minimum prefix length. A short resume may be under it, and then nothing is cached.",
+        "There are no automated tests yet, even though the stages were written to be testable.",
+      ],
+      improvements: [
+        {
+          title: "Hybrid retrieval for the shortlist",
+          body: "Combine keyword scoring (BM25 on title and skills) with the vector ranking using **reciprocal rank fusion**. Embeddings are good at 'similar kind of role' and bad at exact requirements like 'Go' or 'Kubernetes'; keywords are the opposite.",
+        },
+        {
+          title: "Embed the parts that matter",
+          body: "Embed the requirements section on its own, not the whole posting with its benefits and company boilerplate, so similarity reflects the job and not the marketing.",
+        },
+        {
+          title: "Rerank before the expensive call",
+          body: "Rerank the vector top 60 with a cross-encoder so the best candidates are reliably inside the cut, then send fewer postings to Claude for the same recall.",
+        },
+        {
+          title: "Measure it with my own decisions",
+          body: "Every apply or skip is a label. Track **precision@10** of the digest against them, and tune the 60 cutoff and the screen rules from real numbers instead of guesses.",
+        },
+        {
+          title: "Look things up only when unsure",
+          body: "For BORDERLINE postings only, let the model call tools (the company page, similar past postings) before deciding, with a hard cap on rounds. Clear cases stay single-shot and cheap.",
+        },
+        {
+          title: "Say how sure it is",
+          body: "Ask for a confidence alongside the score, and send low-confidence results to BORDERLINE rather than letting them silently become STRONG or REJECT.",
+        },
+      ],
+      testing: {
+        status:
+          "No automated tests yet. The type system and a fail-closed env schema catch configuration mistakes at startup, and every screening rejection is logged with its reason, but correctness is checked by reading the daily digest.",
+        plan: [
+          "Unit tests for the fact check: invented numbers, new technologies, changed employers, and the known blind spots, written as tests that document them.",
+          "Table tests for the screen and pay gate, including the 'intern' / 'internal' case.",
+          "A labelled set of past postings with my apply/skip decisions, used as a regression eval for scoring.",
+        ],
+      },
     },
   },
   {
@@ -249,12 +314,16 @@ export const projects: Project[] = [
         { label: "Summarise", note: "Plain language + a risk level", ai: true },
         { label: "Extract deadlines", note: "Dated to-dos in 5 categories", ai: true },
         { label: "Translate", note: "Into the user's own language", ai: true },
-        { label: "Follow up", note: "Questions about that document" },
+        { label: "Ask", note: "An agent searches all your documents", ai: true },
       ],
       decisions: [
         {
           title: "Not making things up mattered most",
-          body: "A wrong answer about a visa deadline can cost someone a lot. That shaped the whole design: every summary and follow-up answer is about one specific document the user uploaded.",
+          body: "A wrong answer about a visa deadline can cost someone a lot. That shaped the whole design: answers come from the user's own documents through tools, and name the document they came from, instead of from what the model thinks German bureaucracy usually says.",
+        },
+        {
+          title: "Chat as a small agent with tools",
+          body: "Questions like 'what do I have to pay this month?' span several letters. The chat has 5 tools (list documents, list action items, search, get details, get full text) and can call them for up to **4 rounds** before answering. Each tool call streams to the screen as it happens, so you can see what it looked at.",
         },
         {
           title: "Two swappable providers",
@@ -269,6 +338,146 @@ export const projects: Project[] = [
           body: "People don't need a summary that says 'there is a deadline'; they need the date in their calendar. Deadlines come out as dated to-dos and calendar events.",
         },
       ],
+      techChoices: [
+        { tech: "Gemini for analysis", why: "It reads photos of letters directly, so a phone picture of a tax notice works without a separate OCR step. Text PDFs go through pdf-parse first." },
+        { tech: "Groq for chat", why: "Chat is several model calls per question (one per tool round). Groq is fast enough to stream and supports the tool-calling loop, so the conversation stays responsive." },
+        { tech: "Server-sent events", why: "Tool calls and the answer stream to the browser as they happen, instead of a spinner over a multi-step agent loop." },
+        { tech: "Retry with backoff", why: "Up to 3 retries on 503s, and on a 429 it waits as long as the provider asks (up to 65 seconds) rather than guessing." },
+      ],
+      knownGaps: [
+        "Search is a plain substring match over the translation and summary, and it returns the first 500 characters of a document rather than the part that matched. A question about a clause on page 3 can get page 1.",
+        "No automated tests. Everything has been checked by hand against the sample documents in the repo.",
+        "Analysis runs in the background after upload. If the server restarts mid-analysis, that document stays 'pending'.",
+        "Not production-hardened yet: uploaded files are served without an auth check, rate limiting is configured but not enforced, there's no password-reset email, and the schema is synced rather than migrated.",
+      ],
+      improvements: [
+        {
+          title: "Chunk by clause, not by page",
+          body: "German letters and contracts have structure: numbered clauses (§), a Betreff line, a deadline paragraph. Split on that structure and store each chunk with its document and position, so search can return the clause that answers the question.",
+        },
+        {
+          title: "Hybrid search inside the search tool",
+          body: "Replace the substring match with keyword search (Postgres full-text, which handles German compound words far better) plus embeddings, merged with **reciprocal rank fusion**. 'When do I have to move out?' should find 'Kündigungsfrist' even though no word overlaps.",
+        },
+        {
+          title: "Quote, then answer",
+          body: "Make the model quote the exact passage it relied on before answering, and check in code that the quote really appears in the document. If it doesn't, the answer isn't shown.",
+        },
+        {
+          title: "Check dates in code",
+          body: "Parse every extracted deadline with a deterministic date parser and confirm the date appears in the source text. The model finds the deadline; code confirms it.",
+        },
+        {
+          title: "A tighter agent loop",
+          body: "Plan, retrieve, answer, then verify the answer against what was retrieved, still within the 4-round cap. When the documents don't contain the answer, say so plainly instead of answering from general knowledge.",
+        },
+        {
+          title: "An eval over the sample documents",
+          body: "Annotate the 6 sample documents with their correct deadlines, amounts and risk levels, and score every prompt or model change against them: extraction accuracy, retrieval hit rate, and whether it refuses when it should.",
+        },
+      ],
+      testing: {
+        status:
+          "No automated tests yet. Each change has been tested by hand against 6 sample German documents in the repo: a rental contract, an employment contract, a tax assessment, a residence permit extension, a health insurance bill and a registration confirmation. The README says this plainly too.",
+        plan: [
+          "Turn the sample documents into an annotated eval (see above) and run it on every change.",
+          "Unit tests for the retry logic: 503 backoff and honouring the 429 retry-after hint.",
+          "API tests for document ownership, so one user's search can never return another user's document.",
+        ],
+      },
+    },
+  },
+  {
+    slug: "this-site",
+    name: "This portfolio",
+    tagline: "A portfolio you can question, with its own retrieval engine and eval.",
+    period: "Sep 2026",
+    domain: "Retrieval · RAG · Evals",
+    kind: "personal",
+    featured: false,
+    problem:
+      "Most AI portfolios say 'I build RAG' and show a screenshot. I wanted the site itself to be a small, honest RAG system you can use: ask it about me, see what it retrieved and why, and watch it refuse when the answer isn't there.",
+    highlights: [
+      "A BM25 retriever with synonym expansion that runs **in the browser** over every passage on the site, and shows its terms, scores and sources for each answer.",
+      "An optional LLM mode: the server re-runs the same retrieval and Gemini answers **only from those passages**, with citations that point at real text.",
+      "A **22-question eval** that re-runs on every build and is shown on the page, failures included.",
+      "Cost and abuse limits on the LLM route: per-visitor and daily caps, a token cap, and a model that is told to refuse when the passages don't cover the question.",
+    ],
+    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Gemini", "Vercel"],
+    links: [{ label: "Source", href: "https://github.com/niharikastha/portfolio" }],
+    caseStudy: {
+      pipeline: [
+        { label: "Question", note: "Typed or picked from suggestions" },
+        { label: "Tokenise + expand", note: "Stopwords, stemming, synonyms at half weight" },
+        { label: "BM25", note: "Scores every passage on the site" },
+        { label: "Threshold", note: "Weak best match → refuse, don't guess" },
+        { label: "Answer", note: "Gemini, only from the top passages", ai: true },
+        { label: "Cite", note: "Every claim links to its passage" },
+      ],
+      decisions: [
+        {
+          title: "BM25 instead of embeddings",
+          body: "The corpus is a few dozen passages. Keyword scoring runs in the browser in under a millisecond, costs nothing, needs no vector database, and every score can be shown and explained — which is the point of the demo.",
+        },
+        {
+          title: "Refusing is a feature",
+          body: "If the best match is below a threshold, keyword mode says it couldn't find the answer. LLM mode instead adds the general passages about me, so 'tell me about yourself' works, and the model is told to refuse when they don't cover the question. A portfolio that invents facts about its owner would be worse than no demo.",
+        },
+        {
+          title: "Retrieval on the server too",
+          body: "LLM mode re-runs retrieval server-side instead of trusting passages sent from the browser, so nobody can feed the model their own 'facts', and the [n] numbers still match what the visitor sees.",
+        },
+        {
+          title: "Weight fields, not just words",
+          body: "A project's name counts 3× in its own passage, without making the passage look longer to BM25. That one change took the eval from 20 to 21 of 22 and fixed 'What is KlarText?', which used to land on the About paragraph.",
+        },
+        {
+          title: "Show the eval, including failures",
+          body: "The eval result is rendered on the page from the same build, so a content edit that breaks retrieval shows up as a lower number. The failures stay visible because they're the most useful part.",
+        },
+      ],
+      techChoices: [
+        { tech: "Next.js", why: "Static pages for the content, one server route for the LLM, and build-time work (the eval, the OG image) in the same codebase." },
+        { tech: "BM25", why: "Explainable, instant and free at this corpus size. Embeddings would be the next step, not the first one." },
+        { tech: "Gemini Flash", why: "Free tier, fast, and good at 'answer only from these passages and cite them'. A low temperature and a token cap keep answers short and on-script, and the daily cap keeps it inside the free quota." },
+        { tech: "Streaming", why: "The answer appears as it's written instead of after a blank wait." },
+      ],
+      knownGaps: [
+        "Keyword retrieval misses paraphrases. The one eval failure left is 'the legal research tool': the About paragraph uses that exact phrase, so it outranks the LexRoss passage.",
+        "Rate limits are in memory, so each server instance counts separately and they reset on a cold start. Fine for a portfolio, not for a real product.",
+        "The eval checks retrieval only. It doesn't yet check whether the LLM's answer is grounded in the passages it cites.",
+      ],
+      improvements: [
+        {
+          title: "Hybrid search: add embeddings next to BM25",
+          body: "Embed every passage at build time (the corpus is small enough to ship as JSON) and merge the two rankings with **reciprocal rank fusion**. Keywords catch exact names like pgvector; embeddings catch paraphrases like 'German paperwork'.",
+        },
+        {
+          title: "Rerank the top results",
+          body: "Retrieve the top 10 cheaply, then rerank them with a cross-encoder or a small LLM call and keep the best 3. Recall comes from retrieval, precision from reranking.",
+        },
+        {
+          title: "Rewrite the question before searching",
+          body: "Turn 'what about the second one?' into a standalone query using the conversation so far, so follow-up questions retrieve as well as first ones.",
+        },
+        {
+          title: "Let the model search again (agentic retrieval)",
+          body: "Give the model the search as a tool. If the first passages don't answer the question it can search with different terms, capped at **2 rounds** so cost and latency stay bounded.",
+        },
+        {
+          title: "Check answers, not just retrieval",
+          body: "Add a groundedness eval: for each LLM answer, check that every cited sentence is supported by its passage, and that out-of-scope questions are still refused.",
+        },
+      ],
+      testing: {
+        status:
+          "The 22-question retrieval eval runs on every build and its score is on the home page; the project is type-checked. There are no unit tests yet.",
+        plan: [
+          "Make the eval a CI gate: fail the build if the pass rate drops below the current score.",
+          "Add a groundedness eval for LLM mode (see above).",
+          "Unit tests for the tokenizer and the refusal threshold, since those are the parts most likely to regress quietly.",
+        ],
+      },
     },
   },
   {

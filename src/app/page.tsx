@@ -18,7 +18,7 @@ import { runEvals } from "@/lib/evals";
 export default function Home() {
   const photos = getGalleryPhotos();
   // The page is static, so this is read at build time: redeploy after adding the key.
-  const llmEnabled = Boolean(process.env.ANTHROPIC_API_KEY);
+  const llmEnabled = Boolean(process.env.GEMINI_API_KEY);
 
   return (
     <>

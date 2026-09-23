@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ask, corpusSize, tokenize, type AskResult } from "@/lib/retrieval";
+import { ask, corpusSize, llmHits, tokenize, type AskResult } from "@/lib/retrieval";
 import type { EvalResult } from "@/lib/evals";
 import { Reveal, Section } from "./primitives";
 
@@ -182,7 +183,10 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
           transition: { delay: i * 0.18, duration: 0.3 },
         };
 
-  const top = result?.hits[0]?.score ?? 1;
+  const top = result?.hits[0]?.score || 1;
+  // In LLM mode, show exactly the passages the model was given.
+  const shown = result ? (mode === "ai" ? llmHits(result) : result.hits) : [];
+  const background = shown.filter((h) => h.background).length;
 
   return (
     <Section
@@ -196,14 +200,14 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700 px-5 py-3 font-mono text-[11px] text-paper-faint">
             <span>
               <span className="text-gold-400">●</span> retriever: BM25 + synonym expansion
-              {mode === "ai" ? " → Claude" : ""}
+              {mode === "ai" ? " → Gemini" : ""}
             </span>
             {llmEnabled ? (
               <div role="radiogroup" aria-label="Answer mode" className="flex gap-1">
                 {(
                   [
                     ["keyword", "Keyword only"],
-                    ["ai", "With Claude"],
+                    ["ai", "With Gemini"],
                   ] as const
                 ).map(([key, label]) => (
                   <button
@@ -325,9 +329,9 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
                         <p className="text-paper-dim">
                           4.{" "}
                           {mode === "ai"
-                            ? result.hits.length
-                              ? `Sent those ${result.hits.length} passages to Claude, told to answer only from them and cite each one`
-                              : "Nothing to ground an answer in, so it didn't call the model"
+                            ? background
+                              ? `The match was weak, so it added ${background} general passages about me and sent all ${shown.length} to Gemini, told to answer only from them and to refuse if they don't cover it`
+                              : `Sent those ${shown.length} passages to Gemini, told to answer only from them and cite each one`
                             : result.answer.length
                               ? "Built the answer from the best-matching sentences, with sources"
                               : "Nothing matched well enough, so it didn't answer"}
@@ -381,9 +385,9 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
                       )}
                     </div>
 
-                    {result.hits.length ? (
+                    {shown.length ? (
                       <ul className="mt-4 space-y-2">
-                        {result.hits.map((hit, i) => (
+                        {shown.map((hit, i) => (
                           <li
                             key={hit.chunk.id}
                             className={`rounded-xl border p-4 transition-colors duration-300 ${
@@ -396,7 +400,9 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
                               <span className="text-paper-dim">
                                 <span className="text-gold-400">[{i + 1}]</span> {hit.chunk.source}
                               </span>
-                              <span className="nums text-paper-faint">{hit.score.toFixed(2)}</span>
+                              <span className="nums text-paper-faint">
+                                {hit.background ? "background" : hit.score.toFixed(2)}
+                              </span>
                             </div>
                             <div className="mt-2 h-1 overflow-hidden rounded-full bg-ink-800">
                               <motion.div
@@ -424,10 +430,16 @@ export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalRes
 
         <p className="mt-4 text-xs leading-relaxed text-paper-faint">
           {llmEnabled
-            ? "Keyword mode only quotes this site. \"With Claude\" sends the same retrieved passages to an LLM that is told to answer only from them, so the citations still point at real text. "
+            ? "Keyword mode only quotes this site. \"With Gemini\" sends the same retrieved passages to an LLM that is told to answer only from them, so the citations still point at real text. "
             : "This demo only does keyword retrieval, so it can quote this site but not reason beyond it. "}
           The production systems I work on add pgvector embeddings and hybrid dense + sparse search
-          on top.
+          on top.{" "}
+          <Link
+            href="/work/this-site"
+            className="link-underline text-gold-400 transition-colors duration-300 hover:text-gold-300"
+          >
+            How this works →
+          </Link>
         </p>
       </Reveal>
     </Section>

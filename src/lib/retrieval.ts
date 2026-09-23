@@ -15,9 +15,11 @@ import {
   writing,
 } from "@/content/site";
 
-export type Chunk = { id: number; source: string; text: string };
+/** `title` is the thing the passage is about (a project or company name); matches there count extra. */
+export type Chunk = { id: number; source: string; text: string; title?: string };
 
-export type Hit = { chunk: Chunk; score: number; matched: string[] };
+/** `background` marks a passage added for LLM mode rather than found by BM25. */
+export type Hit = { chunk: Chunk; score: number; matched: string[]; background?: boolean };
 
 export type AskResult = {
   queryTerms: string[];
@@ -48,6 +50,7 @@ function buildCorpus(): Chunk[] {
     ]),
     ...projects.map((p) => ({
       source: `Project · ${p.name}`,
+      title: p.name,
       text: `${p.name} (${p.domain}): ${p.tagline} ${p.problem} ${p.highlights.map(plain).join(" ")} Built with ${p.stack.join(", ")}.`,
     })),
     ...skills.map((g) => ({
@@ -136,6 +139,7 @@ const SYNONYMS: Record<string, string[]> = {
 };
 
 const K1 = 1.4;
+const TITLE_BOOST = 3;
 const B = 0.75;
 
 type Index = {
@@ -154,9 +158,12 @@ function getIndex(): Index {
   const docs = chunks.map((c) => {
     const tf = new Map<string, number>();
     for (const t of tokenize(`${c.source} ${c.text}`)) tf.set(t, (tf.get(t) ?? 0) + 1);
+    // Field weighting: a word in the title is stronger evidence than the same word in a paragraph.
+    for (const t of tokenize(c.title ?? "")) tf.set(t, (tf.get(t) ?? 0) + TITLE_BOOST);
     return tf;
   });
-  const lengths = docs.map((d) => [...d.values()].reduce((a, b) => a + b, 0));
+  // Length comes from the real text only, so the title boost doesn't count as a longer passage.
+  const lengths = chunks.map((c) => tokenize(`${c.source} ${c.text}`).length);
   const df = new Map<string, number>();
   for (const d of docs) for (const t of d.keys()) df.set(t, (df.get(t) ?? 0) + 1);
   cached = {
@@ -247,4 +254,21 @@ export function ask(question: string, topK = 3): AskResult {
     corpusSize: N,
     ms: performance.now() - start,
   };
+}
+
+/**
+ * What LLM mode sends the model: the BM25 hits first, so the [n] numbers match
+ * the keyword view, then, when retrieval is weak, the passages about me in
+ * general. Keyword mode has to refuse "tell me about yourself" because no word in
+ * it appears on the site; a model can answer it from the About section, and is
+ * still told to refuse when the passages don't cover the question.
+ */
+export function llmHits(result: AskResult): Hit[] {
+  const strong = (result.hits[0]?.score ?? 0) >= MIN_SCORE && result.hits.length >= 3;
+  if (strong) return result.hits;
+  const have = new Set(result.hits.map((h) => h.chunk.id));
+  const background = getIndex()
+    .chunks.filter((c) => (c.source === "Profile" || c.source === "About") && !have.has(c.id))
+    .map((chunk) => ({ chunk, score: 0, matched: [], background: true }));
+  return [...result.hits, ...background];
 }
