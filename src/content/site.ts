@@ -30,9 +30,9 @@ export const profile = {
 
   // Hero. `headline` is also used by the social share image.
   headline: ["Hi, I'm Astha.", "I build AI features and the apps around them."],
-  heroLines: ["I'm Astha,", "an engineer who"],
-  // Cycles in handwriting after "an engineer who". Keep them short.
-  heroPhrases: ["makes AI behave", "ships RAG", "writes the evals", "reads the logs"],
+  heroLines: ["I'm Astha.", "I build AI that"],
+  // Cycles in handwriting after the last hero line. Keep them short.
+  heroPhrases: ["cites its sources", "knows when to say no", "gets the answer right", "holds up in production"],
   // **Wrapped** phrases get a highlighter swipe.
   subhead:
     "I'm a fullstack engineer at Hyscaler. Most of my work is **RAG and LLM features** for client products in healthcare, fintech, legal-tech and fundraising, and the Node backends and React frontends they sit in. I care about **whether the answer is right**, not just whether it answers.",

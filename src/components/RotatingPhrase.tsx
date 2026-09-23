@@ -21,8 +21,9 @@ export function RotatingPhrase({ phrases }: { phrases: string[] }) {
 
   return (
     <span className="relative inline-block min-h-[1.15em] align-bottom">
-      {/* Screen readers get the full list once, not a live-changing word. */}
-      <span className="sr-only">{phrases.join(", ")}</span>
+      {/* Screen readers get the full list once, not a live-changing word. It's
+          left out of text selection so copying the headline doesn't paste it twice. */}
+      <span className="sr-only select-none">{phrases.join(", ")}</span>
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={phrase}
