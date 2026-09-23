@@ -56,7 +56,8 @@
 
   --color-sky-soft: #0e7490;
 
-  --color-pen: #c2261b;
+  /* Same peach as dark mode, a shade deeper so small handwriting stays readable on white */
+  --color-pen: #f0725e;
   --color-marker: rgb(255 214 10 / 0.5);
 
   color-scheme: light;

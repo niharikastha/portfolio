@@ -67,16 +67,30 @@ export function Contact() {
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
                 href={profile.socials.email}
-                className="link-underline break-all text-lg text-gold-400"
+                className="link-underline break-all text-xl font-semibold text-pen sm:text-2xl"
               >
                 {profile.email}
               </a>
               <button
                 type="button"
                 onClick={copyEmail}
-                className="rounded-full border border-ink-600 px-3 py-1 text-xs text-paper-dim transition-colors duration-300 hover:border-gold-400 hover:text-gold-400"
+                aria-label={copied ? "Email copied" : "Copy email address"}
+                title={copied ? "Copied" : "Copy email"}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-ink-600 text-paper-dim transition-colors duration-300 hover:border-pen hover:text-pen"
               >
-                <span aria-live="polite">{copied ? "Copied!" : "Copy"}</span>
+                <span aria-live="polite" className="sr-only">
+                  {copied ? "Copied" : ""}
+                </span>
+                {copied ? (
+                  <svg aria-hidden viewBox="0 0 16 16" className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m3 8.5 3 3 7-7" />
+                  </svg>
+                ) : (
+                  <svg aria-hidden viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round">
+                    <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+                    <path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5" />
+                  </svg>
+                )}
               </button>
             </div>
 
@@ -108,7 +122,7 @@ export function Contact() {
                     download
                     className="rounded-full bg-gold-400 px-4 py-2 text-xs font-semibold text-ink-950 transition-colors duration-300 hover:bg-gold-300"
                   >
-                    Download résumé
+                    Download resume
                   </a>
                   <a
                     href={`${profile.socials.email}?subject=${encodeURIComponent("Role at ")}`}

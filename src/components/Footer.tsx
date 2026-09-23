@@ -12,9 +12,7 @@ export function Footer() {
               {profile.name}
               <span className="text-gold-400">.</span>
             </p>
-            <p className="mt-2 text-xs text-paper-faint">
-              © {year} · Built with Next.js and Tailwind.
-            </p>
+            <p className="mt-2 text-xs text-paper-faint">© {year}</p>
           </div>
 
           <ul className="flex flex-wrap gap-7">
@@ -22,7 +20,7 @@ export function Footer() {
               ["GitHub", profile.socials.github],
               ["LinkedIn", profile.socials.linkedin],
               ["Email", profile.socials.email],
-              ["Résumé", profile.resumePath],
+              ["Resume", profile.resumePath],
             ].map(([label, href]) => (
               <li key={label}>
                 <a

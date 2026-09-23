@@ -121,9 +121,9 @@ export function Nav({ hide = [], avatar = null }: { hide?: string[]; avatar?: st
           <a
             href={profile.resumePath}
             download
-            className="group flex items-center gap-2 rounded-full bg-pen px-4 py-2 text-sm font-semibold text-ink-950 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_4px_0_-1px_var(--color-paper)]"
+            className="group flex items-center gap-2 rounded-full bg-pen px-4 py-2 text-sm font-semibold text-[#1a0f0c] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_4px_0_-1px_var(--color-paper)]"
           >
-            Résumé
+            Resume
             <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-y-0.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" />
             </svg>
@@ -185,7 +185,7 @@ export function Nav({ hide = [], avatar = null }: { hide?: string[]; avatar?: st
               href={profile.resumePath}
               download
               onClick={() => setOpen(false)}
-              className="block rounded-full bg-pen py-3 text-center text-sm font-semibold text-ink-950"
+              className="block rounded-full bg-pen py-3 text-center text-sm font-semibold text-[#1a0f0c]"
             >
               Download Resume
             </a>

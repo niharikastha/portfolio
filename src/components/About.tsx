@@ -91,7 +91,7 @@ export function About() {
               download
               className="mt-7 block rounded-full border border-ink-600 py-2.5 text-center font-mono text-[11px] uppercase tracking-[0.14em] text-paper transition-colors duration-300 hover:border-gold-400 hover:text-gold-400"
             >
-              Download résumé
+              Download resume
             </a>
           </aside>
         </Reveal>
