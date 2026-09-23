@@ -13,8 +13,6 @@ import { BackToTop } from "@/components/BackToTop";
 import { Ask } from "@/components/Ask";
 import { Gallery } from "@/components/Gallery";
 import { getGalleryPhotos } from "@/lib/gallery";
-import { publicFileExists } from "@/lib/publicFile";
-import { profile } from "@/content/site";
 
 export default function Home() {
   const photos = getGalleryPhotos();
@@ -23,10 +21,7 @@ export default function Home() {
 
   return (
     <>
-      <Nav
-        hide={photos.length ? [] : ["#gallery"]}
-        avatar={publicFileExists(profile.photo) ? profile.photo : null}
-      />
+      <Nav hide={photos.length ? [] : ["#gallery"]} />
       <main id="main">
         <Hero />
         <Ask llmEnabled={llmEnabled} />

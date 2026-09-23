@@ -1,16 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { nav as allNav, profile } from "@/content/site";
+import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 
-/**
- * `hide` drops links to sections that aren't rendered (e.g. an empty gallery).
- * `avatar` is the photo path, or null to show initials.
- */
-export function Nav({ hide = [], avatar = null }: { hide?: string[]; avatar?: string | null }) {
+/** `hide` drops links to sections that aren't rendered (e.g. an empty gallery). */
+export function Nav({ hide = [] }: { hide?: string[] }) {
   const nav = allNav.filter((item) => !hide.includes(item.href));
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -69,18 +66,7 @@ export function Nav({ hide = [], avatar = null }: { hide?: string[]; avatar?: st
     >
       <nav aria-label="Main" className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <a href="#main" className="group flex items-center gap-2.5 text-paper">
-          <span className="relative h-9 w-9 overflow-hidden rounded-full border border-ink-600 bg-ink-850 transition-transform duration-300 group-hover:-rotate-6">
-            {avatar ? (
-              <Image src={avatar} alt="" fill sizes="36px" className="object-cover" />
-            ) : (
-              <span className="flex h-full items-center justify-center text-xs font-bold text-paper-dim">
-                {profile.name
-                  .split(" ")
-                  .map((w) => w[0])
-                  .join("")}
-              </span>
-            )}
-          </span>
+          <Logo className="h-9 w-10 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110" />
           <span className="text-[15px] font-semibold tracking-tight">{profile.name}</span>
         </a>
 

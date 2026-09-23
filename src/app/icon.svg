@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- A little retro computer, drawn loosely like a notebook doodle -->
+  <rect width="64" height="64" rx="14" fill="#101218"/>
+  <g transform="rotate(-6 32 34)">
+    <!-- monitor -->
+    <rect x="12" y="13" width="38" height="30" rx="6" fill="#fbf8f1"/>
+    <rect x="16.5" y="17.5" width="29" height="19" rx="3" fill="#1c1f27"/>
+    <!-- prompt: >_ -->
+    <path d="M21 23.5l4.5 3.5-4.5 3.5" fill="none" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M28.5 31h7" stroke="#ff8a7a" stroke-width="2.6" stroke-linecap="round"/>
+    <!-- power dot and stand -->
+    <circle cx="44" cy="40" r="1.2" fill="#ff8a7a"/>
+    <path d="M27 43l-2 6h14l-2-6" fill="#e9e4d8"/>
+    <path d="M20 50.5h24" stroke="#fbf8f1" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+  <!-- sparkle, same as the hero doodle -->
+  <path d="M52 5v4M52 14v4M45.5 11.5h4M54.5 11.5h4" stroke="#ff8a7a" stroke-width="2" stroke-linecap="round"/>
+</svg>
