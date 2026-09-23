@@ -14,23 +14,26 @@ export const profile = {
   // The canonical origin is resolved at build time from the environment —
   // see src/lib/siteUrl.ts. Set NEXT_PUBLIC_SITE_URL to override it.
   resumePath: "/Astha_Niharika_Resume.pdf",
+  // Drop your photo into /public under this name (a square-ish JPG works best).
+  // Until the file exists, the About section shows your initials instead.
+  photo: "/photo.jpg",
   available: true,
   availableLabel: "Open to AI / fullstack roles",
 
   // Hero
-  headline: ["I build production AI", "systems that ship."],
+  headline: ["Hi, I'm Astha.", "I build AI features and the apps around them."],
   subhead:
-    "Three years turning research-grade AI into products people actually use — RAG over pgvector, multi-provider LLM pipelines, and document systems running live in healthcare, fintech, legal-tech and fundraising.",
+    "I'm a fullstack engineer at Hyscaler. Most of my work is on RAG and LLM features for client products in healthcare, fintech, legal-tech and fundraising, along with the Node backends and React frontends they sit in.",
 
-  // Sits under the metric band. From the résumé summary, and too good to bury.
+  // Sits under the metric band.
   metricsNote:
-    "Plus 40+ hours of manual work automated every week across those four products.",
+    "Between them, these four products also automate 40+ hours of manual work a week.",
 
   // About
   about: [
-    "I'm a fullstack engineer who specialises in the unglamorous half of AI: the retrieval quality, the evaluation loops, the chunking strategy, the fallback when a provider rate-limits you at 2am. Models are easy to call. Making them reliable enough to put in front of a doctor or a lawyer is the actual work.",
-    "At Hyscaler I've shipped four live products across four regulated-ish domains. I cut hallucinations by 65% on a legal knowledge base, dropped retrieval latency 40% with hybrid dense + sparse search, and built the FHIR sync layer that keeps medical devices and physician dashboards in agreement at 100% HIPAA transmission compliance.",
-    "Outside work I build things I personally need — a job-hunting agent that reads 16,500 postings so I don't have to, and a translator for the German bureaucracy that refuses to invent facts about your visa. I'm most useful on teams that care about whether the AI is actually right.",
+    "I'm a fullstack engineer, and these days most of my time goes into the AI side of products: retrieval, chunking, checking whether the answers are actually right, and working out what to do when a provider goes down. Getting a model to respond is quick. Getting it reliable enough for a doctor or a lawyer to use takes most of the effort, and it's the part I enjoy.",
+    "I've been at Hyscaler since January 2024 and have worked on four client products there. On LexRoss, a legal research tool, I brought hallucinations down by 65% and made retrieval 40% faster by combining dense and sparse search. On Doctegrity, I built the sync between medical devices and physician dashboards over WebSockets and FHIR, which had to meet HIPAA rules for patient data.",
+    "Outside work I mostly build tools for my own problems. JobPilot goes through job postings every morning and sends me a shortlist, and KlarText explains German paperwork like rental contracts and visa letters in plain language. I do my best work on teams that care whether the AI is right, not just whether it answers.",
   ],
 
   socials: {
@@ -87,7 +90,7 @@ export const experience: Experience[] = [
     period: "Jan 2024 — Present",
     location: "Bhubaneswar, Odisha",
     summary:
-      "Sole or lead engineer on the AI layer of four client products, plus the backend and frontend around it. Everything below is running in production.",
+      "I work on the AI side of four client products, usually as the sole or lead engineer, plus the backend and frontend around it. All of it is live.",
     highlights: [
       "Designed Retrieval-Augmented Generation systems over PostgreSQL/pgvector and OpenAI APIs, cutting hallucinations **65%** and improving answer accuracy on domain-specific queries.",
       "Architected the document pipeline — parsing, chunking, embedding and indexing **10,000+ documents** — enabling semantic and lexical search across enterprise knowledge bases.",
@@ -137,18 +140,18 @@ export const projects: Project[] = [
   {
     slug: "jobpilot",
     name: "JobPilot",
-    tagline: "An agent that job-hunts for you while you sleep.",
+    tagline: "A job-search agent that runs every morning and sends me a shortlist.",
     period: "May 2026 — Sep 2026",
     domain: "Agentic AI · Automation",
     kind: "personal",
     featured: true,
     problem:
-      "Job hunting is 90% triage and 10% judgement, but every AI tool on the market spends tokens on the triage. JobPilot inverts that: cheap deterministic filters first, expensive model calls only on what survives.",
+      "Most of job hunting is filtering out postings that obviously don't fit, and paying an LLM to do that felt wasteful. So JobPilot runs cheap rule-based filters first and only sends what's left to the model.",
     highlights: [
-      "Scans **16,500 live job postings** and shortlists only the ones worth applying to — rule-based filters cut **~90%** of the corpus before the paid AI step ever runs.",
-      "Rewrites the resume per job with a **guard that blocks the model from inventing facts**; pulls from **6 hiring platforms** and auto-fills applications, deliberately **stopping before submit**.",
-      "Runs **fully unattended**: cron fetches at 6 AM, ranks at 7 AM, emails and Telegrams the shortlist by 9 AM.",
-      "Cost control through local embeddings, pgvector similarity and prompt caching instead of naive per-posting LLM calls.",
+      "Scans **16,500 live job postings** and shortlists the ones worth applying to. Rule-based filters remove about 90% of them before any paid AI call.",
+      "Tailors the resume for each job, with a check that stops the model from inventing facts. Pulls from 6 hiring platforms and fills in applications, but stops before submitting so I can review them.",
+      "Runs on its own: it fetches postings at 6 AM, ranks them at 7, and sends the shortlist by email and Telegram by 9.",
+      "Keeps costs down with local embeddings, pgvector similarity and prompt caching instead of an LLM call per posting.",
     ],
     stack: [
       "NestJS",
@@ -167,17 +170,17 @@ export const projects: Project[] = [
   {
     slug: "klartext",
     name: "KlarText",
-    tagline: "German bureaucracy, translated into plain language you speak.",
+    tagline: "Explains German paperwork in plain language, in your own language.",
     period: "Jan 2026 — Mar 2026",
     domain: "Applied LLMs · Document AI",
     kind: "personal",
     featured: true,
     problem:
-      "A rental contract or a visa letter in German legalese is where newcomers lose money and deadlines. The hard constraint isn't summarisation — it's never being confidently wrong about someone's immigration status.",
+      "Rental contracts, tax notices and visa letters in German are hard to follow when you've just moved, and a missed deadline can be expensive. The thing I cared about most was that it shouldn't make things up, especially about visas.",
     highlights: [
-      "Turns dense German paperwork — rental contracts, tax notices, visa letters — into a plain-language summary with a **risk level**, key details, and a translation **into the user's own language**.",
-      "Extracts every deadline into a dated action item and a calendar event across **5 task categories**, with per-document chat for follow-ups.",
-      "Runs on a **swappable 2-provider AI layer** (Gemini, Groq Llama 3 70B) that retries **up to 3×** with exponential backoff when a provider rate-limits.",
+      "Turns a German document into a plain-language summary with a risk level, the key details, and a translation into the user's own language.",
+      "Pulls out deadlines as dated to-dos and calendar events (5 task categories), and lets you ask follow-up questions about each document.",
+      "Uses two AI providers (Gemini and Llama 3 70B on Groq) that can be swapped, and retries up to 3 times with backoff when one is rate-limited.",
     ],
     stack: ["NestJS", "TypeORM", "PostgreSQL", "Gemini", "Groq", "Llama 3 70B", "Turborepo"],
     metric: { value: "3×", label: "provider failover retries" },
@@ -186,17 +189,17 @@ export const projects: Project[] = [
   {
     slug: "doctegrity",
     name: "Doctegrity",
-    tagline: "Medical devices and physician dashboards, always in agreement.",
+    tagline: "Keeping medical device readings and physician dashboards in sync.",
     period: "2024 — Present",
     domain: "Healthcare · HIPAA",
     kind: "client",
     featured: true,
     problem:
-      "A physician acting on stale readings is a safety incident. The sync layer had to be bidirectional, real-time, and provably compliant with HIPAA transmission rules.",
+      "Doctors need to see current readings, not stale ones, so the sync had to work both ways, in real time, and meet HIPAA rules for sending patient data.",
     highlights: [
-      "Built **bidirectional synchronisation** between medical devices and physician dashboards over **WebSockets and FHIR APIs**.",
-      "Achieved **100% compliance** with HIPAA data-transmission standards for critical patient information.",
-      "Designed the ingestion path so device disconnects and replays never produce a conflicting clinical record.",
+      "Built two-way sync between medical devices and physician dashboards over WebSockets and FHIR APIs.",
+      "Met HIPAA data-transmission standards for critical patient information (**100% compliance**).",
+      "Handled device disconnects and replays so they don't create conflicting records.",
     ],
     stack: ["Node.js", "NestJS", "WebSockets", "FHIR", "PostgreSQL", "Docker"],
     metric: { value: "100%", label: "HIPAA transmission compliance" },
@@ -204,17 +207,17 @@ export const projects: Project[] = [
   {
     slug: "lexross",
     name: "LexRoss",
-    tagline: "Legal research that cites instead of improvising.",
+    tagline: "Legal research answers that point back to their sources.",
     period: "2024 — Present",
     domain: "Legal AI · RAG",
     kind: "client",
     featured: true,
     problem:
-      "In legal work a plausible-sounding wrong answer is worse than no answer. This was a retrieval problem long before it was a generation problem.",
+      "For legal questions, a confident wrong answer is worse than no answer, so most of the work went into retrieval before touching the generation side.",
     highlights: [
-      "RAG architecture over **PostgreSQL/pgvector** that reduced hallucinations by **65%**.",
-      "**Hybrid dense + sparse retrieval** with metadata filtering — **40% faster** queries at **90% relevance**.",
-      "Document pipeline indexing **10,000+ documents** with chunking tuned for long-form legal structure.",
+      "Built RAG on PostgreSQL/pgvector that reduced hallucinations by **65%**.",
+      "Combined dense and sparse search with metadata filters, making queries **40% faster** at 90% relevance.",
+      "Set up a pipeline that indexes **10,000+ documents**, with chunking tuned for long legal texts.",
     ],
     stack: ["NestJS", "PostgreSQL", "pgvector", "OpenAI", "Anthropic", "Mistral"],
     metric: { value: "65%", label: "fewer hallucinations" },
@@ -222,15 +225,15 @@ export const projects: Project[] = [
   {
     slug: "merqube-hyally",
     name: "MerQube Hyally",
-    tagline: "High-volume financial data, ingested without losing a row.",
+    tagline: "Importing large volumes of financial CSV data without dropping rows.",
     period: "2024 — Present",
     domain: "Fintech · Data pipelines",
     kind: "client",
     featured: false,
     problem:
-      "Financial ingestion has no tolerance for silent row loss, and single-threaded Node was the bottleneck.",
+      "The data couldn't lose rows silently, and single-threaded Node was too slow for the volume.",
     highlights: [
-      "Parallelised high-volume CSV processing with **Worker Threads** — **10K+ records daily**, **50% faster**, **99.9% data accuracy**.",
+      "Moved CSV processing onto Worker Threads to handle 10K+ records a day, **50% faster**, with 99.9% data accuracy.",
       "Backend and dashboard work across a multi-app monorepo with a shared NestJS API.",
     ],
     stack: ["NestJS", "Worker Threads", "Next.js", "PostgreSQL", "Prisma", "Docker"],
@@ -239,13 +242,13 @@ export const projects: Project[] = [
   {
     slug: "r4funds",
     name: "R4Funds",
-    tagline: "Fundraising infrastructure for government programmes.",
+    tagline: "A fundraising platform for government programmes.",
     period: "2024 — Present",
     domain: "GovTech · Fundraising",
     kind: "client",
     featured: false,
     problem:
-      "Public-sector fundraising flows need auditability and uptime more than they need novelty.",
+      "For public-sector fundraising, being reliable and auditable matters more than new features.",
     highlights: [
       "Delivered backend and frontend features across a production monorepo with load-tested deployment paths.",
       "Contributed to the shared API, auth and deployment tooling used across the platform.",
@@ -255,17 +258,17 @@ export const projects: Project[] = [
   {
     slug: "walking-pal",
     name: "Walking Pal",
-    tagline: "The first walking-buddy app — social fitness, geolocated.",
+    tagline: "An app for finding people to go walking with.",
     period: "Jun 2023 — Dec 2023",
     domain: "Mobile · Social",
     kind: "personal",
     featured: false,
     problem:
-      "People walk more when someone is waiting for them. The product was really about turning a solitary habit into a standing appointment.",
+      "People tend to walk more when someone is expecting them, so the app was built around meeting up for walks.",
     highlights: [
-      "Built social and events core: **WebSocket chat**, **QR-code friend connections**, push notifications.",
-      "**Geolocation-based walk discovery** with calendar sync, powering **500+ community walks a month**.",
-      "Drove a **23% lift in daily active users** after the social layer shipped.",
+      "Built the social features: WebSocket chat, adding friends by QR code, and push notifications.",
+      "Added location-based walk discovery with calendar sync, used for **500+ community walks a month**.",
+      "Daily active users went up **23%** after the social features launched.",
     ],
     stack: ["React Native", "Node.js", "WebSockets", "MongoDB", "Push notifications"],
     metric: { value: "+23%", label: "daily active users" },
@@ -355,7 +358,7 @@ export const writing = [
   {
     title: "Getting hands-on with Bluetooth Low Energy",
     blurb:
-      "Notes from working with BLE — how the protocol actually behaves on real devices, and the gap between the spec and what ships.",
+      "Notes from working with BLE: how it behaves on real devices, and where that differs from the spec.",
     platform: "LinkedIn",
     date: "2025",
     // TODO: paste the permalink to your BLE post.
@@ -365,24 +368,55 @@ export const writing = [
 ];
 
 /**
- * Community. You mentioned Google Developers seminars — fill in the specific
- * event names, years and cities and this section gets much stronger.
+ * Community. TODO: swap in the real event names, years and cities
+ * (e.g. "DevFest Bhubaneswar 2024") and the names of your hackathons.
  */
 export const community = [
   {
-    title: "Google Developer Groups — seminars & events",
+    title: "Google Developer Groups (GDG)",
     role: "Attendee",
-    // TODO: list the actual events, e.g. "DevFest Bhubaneswar 2024", "I/O Extended 2025".
     detail:
-      "Regular participant in Google Developers seminars and GDG sessions, following Android, Cloud and applied-AI tracks.",
+      "I go to GDG meetups and Google Developers seminars, mostly for the Cloud and applied-AI sessions, and to meet other developers in the area.",
     date: "2023 — Present",
+  },
+  {
+    title: "Hackathons",
+    role: "Participant",
+    detail:
+      "I've taken part in hackathons, building and demoing prototypes with a team against the clock.",
+    date: "2021 — Present",
   },
 ];
 
+/**
+ * Gallery. Put photos in /public/gallery/ and list them here. Entries whose
+ * file doesn't exist yet are skipped, and the section hides itself until at
+ * least one photo is in place.
+ *
+ * `tag` drives the filter buttons, so reuse the same spelling for the same kind
+ * of event.
+ */
+export type GalleryPhoto = {
+  file: string;
+  caption: string;
+  tag: string;
+  date?: string;
+};
+
+export const gallery: GalleryPhoto[] = [
+  // TODO: replace these with your real photos and captions.
+  { file: "gdg-1.jpg", caption: "Google Developer Groups meetup", tag: "GDG" },
+  { file: "gdg-2.jpg", caption: "Google Developers seminar", tag: "GDG" },
+  { file: "hackathon-1.jpg", caption: "Hackathon with my team", tag: "Hackathon" },
+  { file: "hackathon-2.jpg", caption: "Demo time at a hackathon", tag: "Hackathon" },
+];
+
 export const nav = [
+  { label: "Ask AI", href: "#ask" },
   { label: "Work", href: "#work" },
+  { label: "Experience", href: "#experience" },
   { label: "About", href: "#about" },
-  { label: "Skills", href: "#skills" },
-  { label: "Writing", href: "#writing" },
+  { label: "Community", href: "#writing" },
+  { label: "Gallery", href: "#gallery" },
   { label: "Contact", href: "#contact" },
 ];

@@ -5,9 +5,8 @@ export function Writing() {
   return (
     <Section
       id="writing"
-      index="06"
       title="Writing & community"
-      lead="Notes I publish, and the rooms I show up in."
+      lead="Things I've written, and events I go to."
     >
       <div className="grid gap-12 lg:grid-cols-2">
         {/* Writing */}

@@ -1,24 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono, Instrument_Serif } from "next/font/google";
+import { Plus_Jakarta_Sans, IBM_Plex_Mono, Fraunces } from "next/font/google";
 import { profile } from "@/content/site";
 import { getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
-const inter = Inter({
+const sans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-sans-face",
   display: "swap",
 });
 
-const mono = JetBrains_Mono({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   variable: "--font-mono-face",
   display: "swap",
 });
 
-const display = Instrument_Serif({
+const display = Fraunces({
   subsets: ["latin"],
-  weight: "400",
   style: ["normal", "italic"],
   variable: "--font-display-face",
   display: "swap",
@@ -72,9 +72,18 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#08090a",
-  colorScheme: "dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#08090a" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+  ],
+  colorScheme: "dark light",
 };
+
+/**
+ * Runs before first paint: use the visitor's saved choice, else their OS
+ * setting. Without this the page would flash dark before switching to light.
+ */
+const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}document.documentElement.dataset.theme=t}catch(e){}})()`;
 
 /**
  * Person schema so Google can render a rich result for her name —
@@ -116,8 +125,14 @@ function StructuredData() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable} ${display.variable}`}>
+    <html
+      lang="en"
+      className={`${sans.variable} ${mono.variable} ${display.variable}`}
+      data-theme="dark"
+      suppressHydrationWarning
+    >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/*
           Scroll-reveal sections are server-rendered with inline opacity:0 and
           only animate once framer-motion hydrates. If JS never arrives, this

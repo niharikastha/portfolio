@@ -13,7 +13,7 @@ export function Footer() {
               <span className="text-gold-400">.</span>
             </p>
             <p className="mt-2 text-xs text-paper-faint">
-              © {year} · Built with Next.js, Tailwind and too much coffee.
+              © {year} · Built with Next.js and Tailwind.
             </p>
           </div>
 

@@ -48,16 +48,14 @@ export function Reveal({
   );
 }
 
-/** Section wrapper: consistent rhythm, and a numbered eyebrow heading. */
+/** Section wrapper: consistent rhythm and a readable heading. */
 export function Section({
   id,
-  index,
   title,
   lead,
   children,
 }: {
   id: string;
-  index: string;
   title: string;
   lead?: string;
   children: ReactNode;
@@ -66,18 +64,15 @@ export function Section({
     <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-28 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
-          <div className="flex items-baseline gap-4">
-            <span className="nums text-xs text-gold-400">{index}</span>
-            <h2
-              id={`${id}-heading`}
-              className="font-mono text-xs uppercase tracking-[0.22em] text-paper-dim"
-            >
-              {title}
-            </h2>
-          </div>
-          <div className="rule-fade mt-5" />
+          <h2
+            id={`${id}-heading`}
+            className="font-display text-[clamp(2rem,4.5vw,3rem)] font-normal leading-tight tracking-tight text-paper"
+          >
+            {title}
+          </h2>
+          <div className="rule-fade mt-6" />
           {lead ? (
-            <p className="mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-paper-dim">
+            <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-paper-dim">
               {lead}
             </p>
           ) : null}

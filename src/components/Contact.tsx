@@ -9,6 +9,17 @@ type Status = "idle" | "sending" | "sent" | "error";
 export function Contact() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+
+  async function copyEmail() {
+    try {
+      await navigator.clipboard.writeText(profile.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard can be blocked (e.g. insecure origin); the mailto link still works.
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,23 +54,31 @@ export function Contact() {
   return (
     <Section
       id="contact"
-      index="08"
       title="Get in touch"
-      lead="Hiring, contracting, or just want to argue about chunking strategies — either form below works."
+      lead="If you're hiring, need help on a project, or just want to talk about RAG, I'd be glad to hear from you."
     >
       <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr]">
         <Reveal>
           <div>
             <p className="text-pretty text-2xl font-medium leading-snug tracking-tight text-paper">
-              The fastest route is email.
+              Email is the quickest way to reach me.
             </p>
 
-            <a
-              href={profile.socials.email}
-              className="link-underline mt-6 inline-block break-all text-lg text-gold-400"
-            >
-              {profile.email}
-            </a>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <a
+                href={profile.socials.email}
+                className="link-underline break-all text-lg text-gold-400"
+              >
+                {profile.email}
+              </a>
+              <button
+                type="button"
+                onClick={copyEmail}
+                className="rounded-full border border-ink-600 px-3 py-1 text-xs text-paper-dim transition-colors duration-300 hover:border-gold-400 hover:text-gold-400"
+              >
+                <span aria-live="polite">{copied ? "Copied!" : "Copy"}</span>
+              </button>
+            </div>
 
             <dl className="mt-10 space-y-4 text-sm">
               {[

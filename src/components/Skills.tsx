@@ -5,9 +5,8 @@ export function Skills() {
   return (
     <Section
       id="skills"
-      index="04"
       title="Stack"
-      lead="Grouped by where I actually spend time, not by what looks impressive on a list."
+      lead="The tools I use most, grouped roughly by area."
     >
       <div className="grid gap-px overflow-hidden rounded-2xl border border-ink-700 bg-ink-700 sm:grid-cols-2">
         {skills.map((group, i) => (

@@ -31,7 +31,7 @@ export function Hero() {
           </div>
         ) : null}
 
-        <h1 className="text-balance text-[clamp(2.6rem,7.5vw,5.75rem)] font-medium leading-[0.98] tracking-[-0.03em]">
+        <h1 className="text-balance font-display text-[clamp(2.6rem,7.5vw,5.75rem)] font-normal leading-[1.02] tracking-[-0.02em]">
           {profile.headline.map((line, i) => (
             <span key={line} className="rise block" style={{ animationDelay: `${0.08 + i * 0.1}s` }}>
               {line}
@@ -67,7 +67,7 @@ export function Hero() {
             href="#work"
             className="group rounded-full bg-paper px-6 py-3 text-sm font-semibold text-ink-950 transition-all duration-300 hover:bg-gold-400"
           >
-            View selected work
+            See my work
             <span className="ml-2 inline-block transition-transform duration-300 group-hover:translate-x-1">
               →
             </span>
@@ -80,12 +80,10 @@ export function Hero() {
             Download résumé
           </a>
           <a
-            href={profile.socials.github}
-            target="_blank"
-            rel="noreferrer noopener"
+            href="#ask"
             className="rounded-full border border-ink-600 px-6 py-3 text-sm font-medium text-paper transition-colors duration-300 hover:border-gold-400 hover:text-gold-400"
           >
-            GitHub
+            Ask my portfolio
           </a>
         </div>
 

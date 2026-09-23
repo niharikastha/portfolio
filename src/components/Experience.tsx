@@ -3,7 +3,7 @@ import { Reveal, RichText, Section, Tag } from "./primitives";
 
 export function Experience() {
   return (
-    <Section id="experience" index="02" title="Experience">
+    <Section id="experience" title="Experience">
       <div className="space-y-16">
         {experience.map((job) => (
           <Reveal key={job.company}>

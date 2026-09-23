@@ -62,9 +62,8 @@ export async function Github() {
   return (
     <Section
       id="github"
-      index="05"
       title="On GitHub"
-      lead="Public repositories, pulled live from the GitHub API and refreshed hourly."
+      lead="My public repos, pulled from the GitHub API and updated hourly."
     >
       {data ? (
         <>

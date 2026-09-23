@@ -21,9 +21,40 @@
   /* Cool secondary for links and tags */
   --color-sky-soft: #7dd3fc;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
   --font-display: var(--font-display-face), Georgia, serif;
+}
+
+/*
+ * Light theme. Every utility reads these tokens as CSS variables, so swapping
+ * them here re-colours the whole site. Deliberately not cream + amber: a cool
+ * white with a cobalt accent, so light mode has its own identity. The "gold"
+ * tokens are the accent slot, so in light mode they hold the blue.
+ */
+:root[data-theme="light"] {
+  --color-ink-950: #ffffff;
+  --color-ink-900: #f6f7f9;
+  --color-ink-850: #eef0f3;
+  --color-ink-800: #e6e9ed;
+  --color-ink-700: #dde1e6;
+  --color-ink-600: #c3c9d1;
+
+  --color-paper: #0b0d12;
+  --color-paper-dim: #454b55;
+  --color-paper-faint: #626974;
+
+  --color-gold-300: #1e40af;
+  --color-gold-400: #1d4ed8;
+  --color-gold-500: #2563eb;
+
+  --color-sky-soft: #0e7490;
+
+  color-scheme: light;
+}
+
+:root {
+  color-scheme: dark;
 }
 
 @layer base {
@@ -41,6 +72,9 @@
   body {
     background-color: var(--color-ink-950);
     color: var(--color-paper);
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -136,6 +170,11 @@
   .link-underline:focus-visible::after {
     transform: scaleX(1);
   }
+}
+
+/* Grain reads as dirt on a white background, so drop it in light mode */
+:root[data-theme="light"] .grain::before {
+  opacity: 0;
 }
 
 /* Anyone who asks for less motion gets essentially none */

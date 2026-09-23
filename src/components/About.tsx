@@ -1,9 +1,22 @@
+import fs from "node:fs";
+import path from "node:path";
+import Image from "next/image";
 import { profile } from "@/content/site";
 import { Reveal, Section } from "./primitives";
 
+/** Only render the photo once the file is actually in /public. */
+function hasPhoto() {
+  return fs.existsSync(path.join(process.cwd(), "public", profile.photo));
+}
+
 export function About() {
+  const initials = profile.name
+    .split(" ")
+    .map((w) => w[0])
+    .join("");
+
   return (
-    <Section id="about" index="03" title="About">
+    <Section id="about" title="About">
       <div className="grid gap-12 lg:grid-cols-[2fr_1fr]">
         <div className="space-y-6">
           {profile.about.map((para, i) => (
@@ -23,6 +36,21 @@ export function About() {
 
         <Reveal delay={0.12}>
           <aside className="rounded-2xl border border-ink-700 bg-ink-900 p-7">
+            <div className="relative mb-7 aspect-[4/5] overflow-hidden rounded-xl border border-ink-700 bg-ink-850">
+              {hasPhoto() ? (
+                <Image
+                  src={profile.photo}
+                  alt={`Photo of ${profile.name}`}
+                  fill
+                  sizes="(min-width: 1024px) 360px, 100vw"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center font-display text-6xl italic text-paper-faint">
+                  {initials}
+                </div>
+              )}
+            </div>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper-faint">
               At a glance
             </p>

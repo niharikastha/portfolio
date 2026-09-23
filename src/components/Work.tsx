@@ -124,9 +124,8 @@ export function Work() {
   return (
     <Section
       id="work"
-      index="01"
       title="Selected work"
-      lead="Four live products at Hyscaler, plus the things I build for myself. Every number below comes from something running in production."
+      lead="Four client products from Hyscaler and a few things I've built on my own. The numbers come from the live products."
     >
       <Reveal>
         <div role="tablist" aria-label="Filter projects" className="mb-10 flex flex-wrap gap-2">

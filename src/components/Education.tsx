@@ -3,7 +3,7 @@ import { Reveal, Section } from "./primitives";
 
 export function Education() {
   return (
-    <Section id="education" index="07" title="Education">
+    <Section id="education" title="Education">
       <div className="overflow-hidden rounded-2xl border border-ink-700">
         {education.map((item, i) => (
           <Reveal
