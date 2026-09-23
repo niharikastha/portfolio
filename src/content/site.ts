@@ -698,11 +698,9 @@ export type GalleryPhoto = {
 };
 
 export const gallery: GalleryPhoto[] = [
-  // TODO: replace these with your real photos and captions.
-  { file: "gdg-1.jpg", caption: "Google Developer Groups meetup", tag: "GDG" },
-  { file: "gdg-2.jpg", caption: "Google Developers seminar", tag: "GDG" },
-  { file: "hackathon-1.jpg", caption: "Hackathon with my team", tag: "Hackathon" },
-  { file: "hackathon-2.jpg", caption: "Demo time at a hackathon", tag: "Hackathon" },
+  { file: "devfest-bhubaneswar-1.jpg", caption: "DevFest Bhubaneswar, run by Google Developer Groups", tag: "GDG" },
+  { file: "devfest-bhubaneswar-2.jpg", caption: "In the hall between sessions at DevFest Bhubaneswar", tag: "GDG" },
+  // TODO: add hackathon photos here with tag "Hackathon"; the filter buttons appear once there are two tags.
 ];
 
 export const nav = [
