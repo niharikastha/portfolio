@@ -59,6 +59,23 @@ export function Hero() {
           {profile.subhead}
         </p>
 
+        {profile.now ? (
+          <p
+            className="rise mt-5 flex max-w-2xl items-baseline gap-3 text-sm text-paper-dim"
+            style={{ animationDelay: "0.45s" }}
+          >
+            <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-400">
+              Now
+            </span>
+            <span>
+              {profile.now}
+              {profile.nowUpdated ? (
+                <span className="text-paper-faint"> · {profile.nowUpdated}</span>
+              ) : null}
+            </span>
+          </p>
+        ) : null}
+
         <div
           className="rise mt-11 flex flex-wrap items-center gap-3"
           style={{ animationDelay: "0.5s" }}

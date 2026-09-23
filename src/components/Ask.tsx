@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ask, corpusSize, tokenize, type AskResult } from "@/lib/retrieval";
+import type { EvalResult } from "@/lib/evals";
 import { Reveal, Section } from "./primitives";
 
 const SUGGESTIONS = [
@@ -45,8 +46,86 @@ function Chip({ children, dim = false }: { children: string; dim?: boolean }) {
   );
 }
 
-export function Ask() {
+/** Render "[n]" markers in streamed LLM text as clickable citations. */
+function CitedText({ text, onCite }: { text: string; onCite: (n: number) => void }) {
+  return (
+    <>
+      {text.split(/(\[\d+\])/).map((part, i) => {
+        const m = part.match(/^\[(\d+)\]$/);
+        return m ? (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onCite(Number(m[1]))}
+            aria-label={`Show source ${m[1]}`}
+            className="nums align-super text-[10px] text-gold-400 hover:underline"
+          >
+            {part}
+          </button>
+        ) : (
+          <span key={i}>{part}</span>
+        );
+      })}
+    </>
+  );
+}
+
+function EvalCard({ evals }: { evals: EvalResult }) {
+  const pct = Math.round((evals.passed / evals.total) * 100);
+  return (
+    <details className="group mt-6 rounded-2xl border border-ink-700 bg-ink-900 p-5 sm:p-6">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper-faint">
+            Eval · re-run on every build
+          </p>
+          <p className="mt-2 text-sm text-paper-dim">
+            {evals.total} test questions, each with the source that should come back first, plus
+            out-of-scope ones it should refuse.
+          </p>
+        </div>
+        <div className="flex items-center gap-6 font-mono text-xs">
+          <span>
+            <span className="nums text-2xl text-paper">{evals.passed}</span>
+            <span className="text-paper-faint">/{evals.total} pass ({pct}%)</span>
+          </span>
+          <span className="text-paper-faint">
+            answerable {evals.answerable.passed}/{evals.answerable.total} · refusals{" "}
+            {evals.refusals.passed}/{evals.refusals.total}
+          </span>
+          <span aria-hidden className="text-gold-400 transition-transform duration-300 group-open:rotate-90">
+            →
+          </span>
+        </div>
+      </summary>
+      {evals.failures.length ? (
+        <div className="mt-5 border-t border-ink-800 pt-4">
+          <p className="text-xs text-paper-faint">
+            Where it still gets it wrong. I&apos;m leaving these visible, since knowing where
+            retrieval fails is the point of an eval:
+          </p>
+          <ul className="mt-3 space-y-2 font-mono text-[11px]">
+            {evals.failures.map((f) => (
+              <li key={f.q} className="text-paper-dim">
+                “{f.q}” → expected <span className="text-paper">{f.expected}</span>, got{" "}
+                <span className="text-gold-400">{f.got}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </details>
+  );
+}
+
+type Mode = "keyword" | "ai";
+
+export function Ask({ llmEnabled, evals }: { llmEnabled: boolean; evals: EvalResult }) {
   const reduced = useReducedMotion();
+  const [mode, setMode] = useState<Mode>("keyword");
+  const [aiText, setAiText] = useState("");
+  const [aiState, setAiState] = useState<"idle" | "streaming" | "done" | "error">("idle");
+  const abortRef = useRef<AbortController | null>(null);
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<AskResult | null>(null);
   const [asked, setAsked] = useState("");
@@ -61,6 +140,36 @@ export function Ask() {
     setFocused(null);
     setResult(ask(q));
     setRunId((n) => n + 1);
+    if (mode === "ai") void streamAnswer(q);
+  }
+
+  async function streamAnswer(q: string) {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setAiText("");
+    setAiState("streaming");
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q }),
+        signal: controller.signal,
+      });
+      if (!res.body) throw new Error("no body");
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        setAiText((t) => t + decoder.decode(value, { stream: true }));
+      }
+      setAiState(res.ok ? "done" : "error");
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return;
+      setAiText("Couldn't reach AI mode. The keyword answer still works.");
+      setAiState("error");
+    }
   }
 
   // Each pipeline step appears a beat after the last, so you can follow it.
@@ -87,8 +196,38 @@ export function Ask() {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700 px-5 py-3 font-mono text-[11px] text-paper-faint">
             <span>
               <span className="text-gold-400">●</span> retriever: BM25 + synonym expansion
+              {mode === "ai" ? " → Claude" : ""}
             </span>
-            <span>{corpusSize()} passages indexed from this site · no LLM</span>
+            {llmEnabled ? (
+              <div role="radiogroup" aria-label="Answer mode" className="flex gap-1">
+                {(
+                  [
+                    ["keyword", "Keyword only"],
+                    ["ai", "With Claude"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="radio"
+                    aria-checked={mode === key}
+                    onClick={() => {
+                      setMode(key);
+                      if (key === "ai" && asked) void streamAnswer(asked);
+                    }}
+                    className={`rounded px-2 py-1 transition-colors duration-300 ${
+                      mode === key ? "bg-gold-400 text-ink-950" : "hover:text-paper"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <span>
+              {corpusSize()} passages indexed from this site
+              {mode === "ai" ? " · answer written by an LLM from them" : " · no LLM"}
+            </span>
           </div>
 
           <div className="p-5 sm:p-7">
@@ -184,9 +323,14 @@ export function Ask() {
                       </motion.li>
                       <motion.li {...step(3)}>
                         <p className="text-paper-dim">
-                          4. {result.answer.length
-                            ? "Built the answer from the best-matching sentences, with sources"
-                            : "Nothing matched well enough, so it didn't answer"}
+                          4.{" "}
+                          {mode === "ai"
+                            ? result.hits.length
+                              ? `Sent those ${result.hits.length} passages to Claude, told to answer only from them and cite each one`
+                              : "Nothing to ground an answer in, so it didn't call the model"
+                            : result.answer.length
+                              ? "Built the answer from the best-matching sentences, with sources"
+                              : "Nothing matched well enough, so it didn't answer"}
                         </p>
                       </motion.li>
                     </ol>
@@ -198,7 +342,18 @@ export function Ask() {
                       Answer to “{asked}”
                     </p>
                     <div className="mt-4 rounded-xl border border-ink-700 bg-ink-850 p-5 text-sm leading-relaxed text-paper">
-                      {result.answer.length ? (
+                      {mode === "ai" ? (
+                        <p aria-live="polite" className="whitespace-pre-wrap">
+                          {aiText ? (
+                            <CitedText text={aiText} onCite={setFocused} />
+                          ) : (
+                            <span className="text-paper-faint">Thinking…</span>
+                          )}
+                          {aiState === "streaming" && aiText ? (
+                            <span aria-hidden className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-gold-400 align-middle" />
+                          ) : null}
+                        </p>
+                      ) : result.answer.length ? (
                         <p>
                           {result.answer.map((a) => (
                             <span key={a.cite}>
@@ -265,10 +420,14 @@ export function Ask() {
           </div>
         </div>
 
+        <EvalCard evals={evals} />
+
         <p className="mt-4 text-xs leading-relaxed text-paper-faint">
-          This demo only does keyword retrieval, so it can quote this site but not reason beyond it.
-          The production systems I work on add pgvector embeddings, hybrid dense + sparse search and
-          an LLM on top.
+          {llmEnabled
+            ? "Keyword mode only quotes this site. \"With Claude\" sends the same retrieved passages to an LLM that is told to answer only from them, so the citations still point at real text. "
+            : "This demo only does keyword retrieval, so it can quote this site but not reason beyond it. "}
+          The production systems I work on add pgvector embeddings and hybrid dense + sparse search
+          on top.
         </p>
       </Reveal>
     </Section>

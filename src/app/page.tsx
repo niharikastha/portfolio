@@ -13,16 +13,19 @@ import { BackToTop } from "@/components/BackToTop";
 import { Ask } from "@/components/Ask";
 import { Gallery } from "@/components/Gallery";
 import { getGalleryPhotos } from "@/lib/gallery";
+import { runEvals } from "@/lib/evals";
 
 export default function Home() {
   const photos = getGalleryPhotos();
+  // The page is static, so this is read at build time: redeploy after adding the key.
+  const llmEnabled = Boolean(process.env.ANTHROPIC_API_KEY);
 
   return (
     <>
       <Nav hide={photos.length ? [] : ["#gallery"]} />
       <main id="main">
         <Hero />
-        <Ask />
+        <Ask llmEnabled={llmEnabled} evals={runEvals()} />
         <Work />
         <Experience />
         <About />

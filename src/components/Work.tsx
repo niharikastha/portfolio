@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { projects, type Project } from "@/content/site";
+import Link from "next/link";
 import { Reveal, RichText, Section, Tag } from "./primitives";
+import { PipelineDiagram } from "./PipelineDiagram";
 
 type Filter = "featured" | "all" | "personal" | "client";
 
@@ -81,6 +83,12 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
           ))}
         </ul>
 
+        {project.caseStudy && project.slug === "jobpilot" ? (
+          <div className="mt-7">
+            <PipelineDiagram steps={project.caseStudy.pipeline} compact />
+          </div>
+        ) : null}
+
         <ul className="mt-7 flex flex-wrap gap-2">
           {project.stack.map((s) => (
             <Tag key={s}>{s}</Tag>
@@ -92,9 +100,17 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
             Built at Hyscaler for a client. Source and internal architecture are proprietary —
             happy to walk through the design decisions in a conversation.
           </p>
-        ) : project.links?.length ? (
+        ) : project.links?.length || project.caseStudy ? (
           <div className="mt-6 flex flex-wrap gap-5 border-t border-ink-800 pt-5">
-            {project.links.map((l) => (
+            {project.caseStudy ? (
+              <Link
+                href={`/work/${project.slug}`}
+                className="link-underline font-mono text-xs uppercase tracking-[0.14em] text-gold-400 transition-colors duration-300 hover:text-gold-300"
+              >
+                Read case study →
+              </Link>
+            ) : null}
+            {project.links?.map((l) => (
               <a
                 key={l.href}
                 href={l.href}

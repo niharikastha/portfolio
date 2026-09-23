@@ -80,6 +80,46 @@ export function Contact() {
               </button>
             </div>
 
+            {profile.available ? (
+              <div className="mt-8 rounded-2xl border border-gold-400/40 bg-gold-400/[0.05] p-5">
+                <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-gold-400">
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-gold-400" />
+                  Hiring? The short version
+                </p>
+                <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 text-sm">
+                  {[
+                    ["Looking for", profile.lookingFor],
+                    ["Experience", "~3 years, AI + fullstack, 4 live client products"],
+                    ["Based in", profile.location],
+                    ["Work mode", profile.workModes],
+                    ["Notice", profile.noticePeriod],
+                  ]
+                    .filter(([, v]) => v)
+                    .map(([label, value]) => (
+                      <div key={label} className="contents">
+                        <dt className="text-paper-faint">{label}</dt>
+                        <dd className="text-paper">{value}</dd>
+                      </div>
+                    ))}
+                </dl>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <a
+                    href={profile.resumePath}
+                    download
+                    className="rounded-full bg-gold-400 px-4 py-2 text-xs font-semibold text-ink-950 transition-colors duration-300 hover:bg-gold-300"
+                  >
+                    Download résumé
+                  </a>
+                  <a
+                    href={`${profile.socials.email}?subject=${encodeURIComponent("Role at ")}`}
+                    className="rounded-full border border-ink-600 px-4 py-2 text-xs text-paper transition-colors duration-300 hover:border-gold-400 hover:text-gold-400"
+                  >
+                    Email about a role
+                  </a>
+                </div>
+              </div>
+            ) : null}
+
             <dl className="mt-10 space-y-4 text-sm">
               {[
                 ["Phone", profile.phone, `tel:${profile.phone.replace(/\s/g, "")}`],

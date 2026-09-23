@@ -1,5 +1,15 @@
+import fs from "node:fs";
+import path from "node:path";
 import { ImageResponse } from "next/og";
 import { metrics, profile } from "@/content/site";
+
+/** The profile photo as a data URL, or null until it's added to /public. */
+function photoDataUrl() {
+  const file = path.join(process.cwd(), "public", profile.photo);
+  if (!fs.existsSync(file)) return null;
+  const type = file.endsWith(".png") ? "image/png" : "image/jpeg";
+  return `data:${type};base64,${fs.readFileSync(file).toString("base64")}`;
+}
 
 export const alt = `${profile.name} — ${profile.role}`;
 export const size = { width: 1200, height: 630 };
@@ -10,6 +20,8 @@ export const contentType = "image/png";
  * Uses the runtime's default font only — no network font fetch at build time.
  */
 export default async function Image() {
+  const photo = photoDataUrl();
+
   return new ImageResponse(
     (
       <div
@@ -45,8 +57,9 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* headline */}
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        {/* headline + photo */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "48px" }}>
+        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
           <div
             style={{
               fontSize: "86px",
@@ -64,8 +77,25 @@ export default async function Image() {
             {profile.role}
           </div>
           <div style={{ fontSize: "26px", color: "#a4abb3", marginTop: "18px" }}>
-            RAG · pgvector · LLM pipelines · Node.js · Next.js
+            {profile.headline[1]}
           </div>
+        </div>
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photo}
+            alt=""
+            width={220}
+            height={275}
+            style={{
+              width: "220px",
+              height: "275px",
+              objectFit: "cover",
+              borderRadius: "20px",
+              border: "2px solid #2a2e33",
+            }}
+          />
+        ) : null}
         </div>
 
         {/* metric strip */}

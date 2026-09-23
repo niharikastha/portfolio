@@ -32,6 +32,23 @@ export function About() {
               </p>
             </Reveal>
           ))}
+
+          {profile.story.length ? (
+            <Reveal delay={0.1}>
+              <div className="border-l-2 border-gold-400/60 pl-5">
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-paper-faint">
+                  How I got here
+                </h3>
+                <div className="mt-3 space-y-4">
+                  {profile.story.map((para) => (
+                    <p key={para} className="text-pretty leading-relaxed text-paper-dim">
+                      {para}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          ) : null}
         </div>
 
         <Reveal delay={0.12}>

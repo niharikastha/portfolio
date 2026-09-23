@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, IBM_Plex_Mono, Fraunces } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { profile } from "@/content/site";
 import { getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
@@ -151,6 +152,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <StructuredData />
         {children}
+        {/* Cookieless page views; only reports when deployed on Vercel with Analytics enabled. */}
+        <Analytics />
       </body>
     </html>
   );

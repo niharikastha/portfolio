@@ -19,6 +19,14 @@ export const profile = {
   photo: "/photo.jpg",
   available: true,
   availableLabel: "Open to AI / fullstack roles",
+  // Hire-me card. Leave noticePeriod empty to hide that row.
+  lookingFor: "AI engineer or fullstack roles where the AI has to be right, not just respond",
+  workModes: "Remote & hybrid",
+  noticePeriod: "", // TODO: e.g. "30 days"
+
+  // One line about what you're working on right now. Empty string hides it.
+  now: "Adding an LLM mode to the Ask my portfolio demo on this site",
+  nowUpdated: "Sep 2026",
 
   // Hero
   headline: ["Hi, I'm Astha.", "I build AI features and the apps around them."],
@@ -35,6 +43,10 @@ export const profile = {
     "I've been at Hyscaler since January 2024 and have worked on four client products there. On LexRoss, a legal research tool, I brought hallucinations down by 65% and made retrieval 40% faster by combining dense and sparse search. On Doctegrity, I built the sync between medical devices and physician dashboards over WebSockets and FHIR, which had to meet HIPAA rules for patient data.",
     "Outside work I mostly build tools for my own problems. JobPilot goes through job postings every morning and sends me a shortlist, and KlarText explains German paperwork like rental contracts and visa letters in plain language. I do my best work on teams that care whether the AI is right, not just whether it answers.",
   ],
+
+  // "How I got here": a short paragraph or two in your own words — how you got
+  // into engineering and then into AI. Shown in About only when non-empty.
+  story: [] as string[], // TODO
 
   socials: {
     github: "https://github.com/niharikastha",
@@ -134,6 +146,19 @@ export type Project = {
   stack: string[];
   metric?: { value: string; label: string };
   links?: { label: string; href: string }[];
+  /** Having one gives the project a page at /work/<slug>. */
+  caseStudy?: CaseStudy;
+};
+
+export type CaseStudy = {
+  /** The pipeline, in order. `note` is the short label under each step. */
+  pipeline: { label: string; note: string; ai?: boolean }[];
+  decisions: { title: string; body: string }[];
+  // TODO: these two are yours to write; each section hides while empty.
+  whatBroke?: string[];
+  nextTime?: string[];
+  /** Files in /public/work/<slug>/. Missing files are skipped. */
+  screenshots?: { file: string; caption: string }[];
 };
 
 export const projects: Project[] = [
@@ -166,6 +191,38 @@ export const projects: Project[] = [
     ],
     metric: { value: "16,500", label: "postings triaged" },
     links: [{ label: "Source", href: "https://github.com/niharikastha/resume-ai-autopilot" }],
+    caseStudy: {
+      pipeline: [
+        { label: "Fetch", note: "16,500 postings from 6 platforms · 6 AM" },
+        { label: "Rule filters", note: "~90% dropped before any paid call" },
+        { label: "Embed + match", note: "Local embeddings, pgvector similarity" },
+        { label: "Rank", note: "Claude with prompt caching · 7 AM", ai: true },
+        { label: "Tailor resume", note: "Fact check against the real resume", ai: true },
+        { label: "Shortlist", note: "Email + Telegram by 9 AM · stops before submit" },
+      ],
+      decisions: [
+        {
+          title: "Cheap filters before the model",
+          body: "Most postings are obviously a bad fit. Plain rule-based filters throw out about 90% of them, so paid model calls only go to the ones that are actually close.",
+        },
+        {
+          title: "Embeddings for similarity, the LLM for judgement",
+          body: "Local embeddings and pgvector handle 'is this roughly my kind of job'. Claude is only asked the harder question of how well it fits, and prompt caching keeps the repeated context (my resume, my preferences) cheap.",
+        },
+        {
+          title: "A fact check on tailored resumes",
+          body: "A tailored resume that invents a skill is worse than an untailored one. Each rewrite is checked against the source resume so the model can reword and reorder, but not add.",
+        },
+        {
+          title: "A human stays in the loop",
+          body: "It fills in applications but stops before submitting. Sending an application is the one step that can't be undone, so I review it.",
+        },
+        {
+          title: "Runs on a schedule",
+          body: "Fetching, ranking and sending are timed jobs (6, 7 and 9 AM) built on BullMQ and Redis, so the shortlist is waiting in the morning without me starting anything.",
+        },
+      ],
+    },
   },
   {
     slug: "klartext",
@@ -185,6 +242,34 @@ export const projects: Project[] = [
     stack: ["NestJS", "TypeORM", "PostgreSQL", "Gemini", "Groq", "Llama 3 70B", "Turborepo"],
     metric: { value: "3×", label: "provider failover retries" },
     links: [{ label: "Source", href: "https://github.com/niharikastha/klartext" }],
+    caseStudy: {
+      pipeline: [
+        { label: "Upload", note: "Rental contract, tax notice, visa letter" },
+        { label: "Understand", note: "Gemini or Llama 3 70B on Groq", ai: true },
+        { label: "Summarise", note: "Plain language + a risk level", ai: true },
+        { label: "Extract deadlines", note: "Dated to-dos in 5 categories", ai: true },
+        { label: "Translate", note: "Into the user's own language", ai: true },
+        { label: "Follow up", note: "Questions about that document" },
+      ],
+      decisions: [
+        {
+          title: "Not making things up mattered most",
+          body: "A wrong answer about a visa deadline can cost someone a lot. That shaped the whole design: every summary and follow-up answer is about one specific document the user uploaded.",
+        },
+        {
+          title: "Two swappable providers",
+          body: "Gemini and Llama 3 70B on Groq are interchangeable, so the app isn't tied to one provider's limits or pricing.",
+        },
+        {
+          title: "Retries with backoff",
+          body: "Free and cheap tiers rate-limit often. When a provider is rate-limited, requests retry up to 3 times with backoff, so a busy provider shows up as a slower answer rather than an error.",
+        },
+        {
+          title: "Deadlines as actions",
+          body: "People don't need a summary that says 'there is a deadline'; they need the date in their calendar. Deadlines come out as dated to-dos and calendar events.",
+        },
+      ],
+    },
   },
   {
     slug: "doctegrity",
