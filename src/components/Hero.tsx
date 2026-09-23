@@ -31,8 +31,9 @@ export function Hero() {
     <section className="relative overflow-hidden pt-32 pb-16 sm:pt-40">
       <div aria-hidden className="dot-grid pointer-events-none absolute inset-0" />
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 lg:grid-cols-[1.25fr_0.75fr]">
-        <div>
+      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
+        {/* A size container, so the handwritten phrase can scale to the column instead of widening it. */}
+        <div className="@container min-w-0">
           {job ? (
             <p className="rise inline-flex items-center gap-2.5 rounded-full border border-ink-700 bg-ink-900/80 py-1.5 pr-4 pl-3 text-xs text-paper-dim backdrop-blur">
               {profile.available ? (
@@ -57,7 +58,8 @@ export function Hero() {
                 {line}
               </span>
             ))}
-            <span className="block text-[1.08em] tracking-normal">
+            {/* Capped at 10% of the column: the longest phrase then still fits on one line. */}
+            <span className="block text-[min(1.08em,10cqw)] tracking-normal">
               <RotatingPhrase phrases={profile.heroPhrases} />
             </span>
           </h1>
