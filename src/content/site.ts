@@ -700,6 +700,8 @@ export type GalleryPhoto = {
 export const gallery: GalleryPhoto[] = [
   { file: "devfest-bhubaneswar-1.jpg", caption: "DevFest Bhubaneswar, run by Google Developer Groups", tag: "GDG" },
   { file: "devfest-bhubaneswar-2.jpg", caption: "In the hall between sessions at DevFest Bhubaneswar", tag: "GDG" },
+  { file: "off-the-clock-1.jpg", caption: "Dressed up for an evening out", tag: "Off the clock" },
+  { file: "off-the-clock-2.jpg", caption: "Rooftop dinner on a night off", tag: "Off the clock" },
   // TODO: add hackathon photos here with tag "Hackathon"; the filter buttons appear once there are two tags.
 ];
 
