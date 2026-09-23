@@ -1,12 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
 import Image from "next/image";
 import { profile } from "@/content/site";
+import { publicFileExists } from "@/lib/publicFile";
 import { Reveal, Section } from "./primitives";
 
-/** Only render the photo once the file is actually in /public. */
-function hasPhoto() {
-  return fs.existsSync(path.join(process.cwd(), "public", profile.photo));
+/** A different shot from the hero if there is one, else the same photo, else initials. */
+function aboutPhoto() {
+  return [profile.aboutPhoto, profile.photo].find((src) => src && publicFileExists(src)) ?? null;
 }
 
 export function About() {
@@ -15,6 +14,7 @@ export function About() {
     .map((w) => w[0])
     .join("");
 
+  const photo = aboutPhoto();
   return (
     <Section id="about" title="About">
       <div className="grid gap-12 lg:grid-cols-[2fr_1fr]">
@@ -54,16 +54,16 @@ export function About() {
         <Reveal delay={0.12}>
           <aside className="rounded-2xl border border-ink-700 bg-ink-900 p-7">
             <div className="relative mb-7 aspect-[4/5] overflow-hidden rounded-xl border border-ink-700 bg-ink-850">
-              {hasPhoto() ? (
+              {photo ? (
                 <Image
-                  src={profile.photo}
+                  src={photo}
                   alt={`Photo of ${profile.name}`}
                   fill
                   sizes="(min-width: 1024px) 360px, 100vw"
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center font-display text-6xl italic text-paper-faint">
+                <div className="flex h-full items-center justify-center text-6xl font-bold text-paper-faint">
                   {initials}
                 </div>
               )}

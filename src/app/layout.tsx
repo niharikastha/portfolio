@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, IBM_Plex_Mono, Fraunces } from "next/font/google";
+import { Plus_Jakarta_Sans, IBM_Plex_Mono, Kalam } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { profile } from "@/content/site";
 import { getSiteUrl } from "@/lib/siteUrl";
@@ -18,10 +18,11 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const display = Fraunces({
+// Handwriting for the margin notes. Kalam is from the Indian Type Foundry.
+const hand = Kalam({
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-display-face",
+  weight: ["400", "700"],
+  variable: "--font-hand-face",
   display: "swap",
 });
 
@@ -128,7 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${mono.variable} ${display.variable}`}
+      className={`${sans.variable} ${mono.variable} ${hand.variable}`}
       data-theme="dark"
       suppressHydrationWarning
     >

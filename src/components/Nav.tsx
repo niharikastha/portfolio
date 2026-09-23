@@ -1,16 +1,21 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { nav as allNav, profile } from "@/content/site";
 import { ThemeToggle } from "./ThemeToggle";
 
-/** `hide` drops links to sections that aren't rendered (e.g. an empty gallery). */
-export function Nav({ hide = [] }: { hide?: string[] }) {
+/**
+ * `hide` drops links to sections that aren't rendered (e.g. an empty gallery).
+ * `avatar` is the photo path, or null to show initials.
+ */
+export function Nav({ hide = [], avatar = null }: { hide?: string[]; avatar?: string | null }) {
   const nav = allNav.filter((item) => !hide.includes(item.href));
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 220, damping: 40, restDelta: 0.001 });
 
@@ -63,41 +68,67 @@ export function Nav({ hide = [] }: { hide?: string[] }) {
       }`}
     >
       <nav aria-label="Main" className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <a
-          href="#main"
-          className="font-display text-xl text-paper"
-        >
-          {profile.name}
-          <span className="text-gold-400">.</span>
+        <a href="#main" className="group flex items-center gap-2.5 text-paper">
+          <span className="relative h-9 w-9 overflow-hidden rounded-full border border-ink-600 bg-ink-850 transition-transform duration-300 group-hover:-rotate-6">
+            {avatar ? (
+              <Image src={avatar} alt="" fill sizes="36px" className="object-cover" />
+            ) : (
+              <span className="flex h-full items-center justify-center text-xs font-bold text-paper-dim">
+                {profile.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .join("")}
+              </span>
+            )}
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight">{profile.name}</span>
         </a>
 
-        <ul className="hidden items-center gap-6 lg:flex">
-          {nav.map((item) => (
-            <li key={item.href}>
-              <a
-                href={item.href}
-                aria-current={active === item.href ? "location" : undefined}
-                className={`link-underline text-sm transition-colors duration-300 hover:text-paper ${
-                  active === item.href ? "text-gold-400" : "text-paper-dim"
-                }`}
-              >
-                {item.label}
-              </a>
-            </li>
-          ))}
-          <li>
-            <ThemeToggle />
-          </li>
-          <li>
-            <a
-              href={profile.resumePath}
-              download
-              className="rounded-full bg-gold-400 px-4 py-2 text-sm font-semibold text-ink-950 transition-transform duration-300 hover:scale-[1.04] hover:bg-gold-300"
-            >
-              Resume
-            </a>
-          </li>
+        <ul
+          onMouseLeave={() => setHovered(null)}
+          className={`hidden items-center gap-0.5 rounded-full border p-1 transition-colors duration-500 lg:flex ${
+            scrolled ? "border-ink-700 bg-ink-900/70" : "border-ink-700/70 bg-ink-900/40 backdrop-blur-md"
+          }`}
+        >
+          {nav.map((item) => {
+            const lit = (hovered ?? active) === item.href;
+            return (
+              <li key={item.href} className="relative">
+                {lit ? (
+                  <motion.span
+                    layoutId="nav-pill"
+                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    className="absolute inset-0 rounded-full bg-ink-800 shadow-[inset_0_0_0_1px_var(--color-ink-600)]"
+                  />
+                ) : null}
+                <a
+                  href={item.href}
+                  onMouseEnter={() => setHovered(item.href)}
+                  aria-current={active === item.href ? "location" : undefined}
+                  className={`relative block rounded-full px-3 py-1.5 text-[13px] transition-colors duration-300 xl:px-3.5 ${
+                    lit ? "text-paper" : "text-paper-dim hover:text-paper"
+                  }`}
+                >
+                  {item.label}
+                </a>
+              </li>
+            );
+          })}
         </ul>
+
+        <div className="hidden items-center gap-2 lg:flex">
+          <ThemeToggle />
+          <a
+            href={profile.resumePath}
+            download
+            className="group flex items-center gap-2 rounded-full bg-pen px-4 py-2 text-sm font-semibold text-ink-950 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_4px_0_-1px_var(--color-paper)]"
+          >
+            Résumé
+            <svg aria-hidden viewBox="0 0 16 16" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-y-0.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 2v8m0 0-3-3m3 3 3-3M3 13h10" />
+            </svg>
+          </a>
+        </div>
 
         <div className="flex items-center gap-2 lg:hidden">
           <ThemeToggle />
@@ -142,7 +173,7 @@ export function Nav({ hide = [] }: { hide?: string[] }) {
                 onClick={() => setOpen(false)}
                 aria-current={active === item.href ? "location" : undefined}
                 className={`block py-3.5 text-base ${
-                  active === item.href ? "text-gold-400" : "text-paper-dim"
+                  active === item.href ? "text-pen" : "text-paper-dim"
                 }`}
               >
                 {item.label}
@@ -154,7 +185,7 @@ export function Nav({ hide = [] }: { hide?: string[] }) {
               href={profile.resumePath}
               download
               onClick={() => setOpen(false)}
-              className="block rounded-full bg-gold-400 py-3 text-center text-sm font-semibold text-ink-950"
+              className="block rounded-full bg-pen py-3 text-center text-sm font-semibold text-ink-950"
             >
               Download Resume
             </a>
@@ -165,7 +196,7 @@ export function Nav({ hide = [] }: { hide?: string[] }) {
       {/* Reading progress */}
       <motion.div
         style={{ scaleX: progress }}
-        className="h-[2px] origin-left bg-gradient-to-r from-gold-500 via-gold-400 to-sky-soft"
+        className="h-[2px] origin-left bg-gradient-to-r from-pen via-gold-400 to-pen"
       />
     </header>
   );

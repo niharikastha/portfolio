@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { projects, type Project } from "@/content/site";
 import Link from "next/link";
-import { Reveal, RichText, Section, Tag } from "./primitives";
+import { Reveal, RichText, Section } from "./primitives";
+import { TechStack } from "./TechStack";
 import { PipelineDiagram } from "./PipelineDiagram";
 
 type Filter = "featured" | "all" | "personal" | "client";
@@ -45,7 +46,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
                 </span>
               ) : null}
             </div>
-            <p className="mt-1.5 font-display text-lg italic text-gold-400">{project.tagline}</p>
+            <p className="mt-1.5 -rotate-1 font-hand text-xl text-pen">{project.tagline}</p>
           </div>
 
           {project.metric ? (
@@ -89,11 +90,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
           </div>
         ) : null}
 
-        <ul className="mt-7 flex flex-wrap gap-2">
-          {project.stack.map((s) => (
-            <Tag key={s}>{s}</Tag>
-          ))}
-        </ul>
+        <TechStack items={project.stack} size="sm" className="mt-7" />
 
         {project.kind === "client" ? (
           <p className="mt-6 border-t border-ink-800 pt-5 text-xs leading-relaxed text-paper-faint">

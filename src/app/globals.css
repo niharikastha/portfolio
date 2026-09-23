@@ -23,7 +23,13 @@
 
   --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SF Mono", monospace;
-  --font-display: var(--font-display-face), Georgia, serif;
+  /* Headings use the sans face at heavier weights; the notes are handwritten. */
+  --font-display: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-hand-face), "Comic Sans MS", cursive;
+
+  /* Red pen for margin notes, highlighter for key phrases */
+  --color-pen: #ff8a7a;
+  --color-marker: rgb(255 200 92 / 0.28);
 }
 
 /*
@@ -49,6 +55,9 @@
   --color-gold-500: #2563eb;
 
   --color-sky-soft: #0e7490;
+
+  --color-pen: #c2261b;
+  --color-marker: rgb(255 214 10 / 0.5);
 
   color-scheme: light;
 }
@@ -136,6 +145,46 @@
 
   .rise {
     animation: rise-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Highlighter swipe behind a phrase: uneven edges, slightly tilted, like a real one */
+  .marker {
+    padding: 0 0.2em;
+    margin: 0 -0.1em;
+    border-radius: 0.3em 0.8em 0.4em 0.9em;
+    background-image: linear-gradient(
+      100deg,
+      transparent 0.2em,
+      var(--color-marker) 0.4em,
+      var(--color-marker) calc(100% - 0.4em),
+      transparent calc(100% - 0.15em)
+    );
+    background-size: 100% 62%;
+    background-position: 0 78%;
+    background-repeat: no-repeat;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  /* Notebook dot grid, fading out towards the edges */
+  .dot-grid {
+    background-image: radial-gradient(var(--color-ink-600) 1px, transparent 1.2px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 75%);
+  }
+
+  /* Draws an SVG stroke in once, for the hand-drawn doodles */
+  @keyframes draw-in {
+    from {
+      stroke-dashoffset: var(--len, 400);
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  .draw {
+    stroke-dasharray: var(--len, 400);
+    animation: draw-in 1.2s cubic-bezier(0.65, 0, 0.35, 1) both;
   }
 
   /* Hairline rule that fades at both ends */

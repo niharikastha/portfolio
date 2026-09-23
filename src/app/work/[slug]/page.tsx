@@ -6,7 +6,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { profile, projects } from "@/content/site";
 import { PipelineDiagram } from "@/components/PipelineDiagram";
-import { RichText, Tag } from "@/components/primitives";
+import { RichText } from "@/components/primitives";
+import { TechStack } from "@/components/TechStack";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Footer } from "@/components/Footer";
 
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 
 function Heading({ children }: { children: string }) {
   return (
-    <h2 className="font-display text-[clamp(1.6rem,3vw,2.2rem)] font-normal leading-tight tracking-tight text-paper">
+    <h2 className="font-display text-[clamp(1.6rem,3vw,2.2rem)] font-bold leading-tight tracking-[-0.03em] text-paper">
       {children}
     </h2>
   );
@@ -125,10 +126,10 @@ export default async function CaseStudyPage({ params }: { params: Promise<Params
         <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-paper-faint">
           Case study · {project.period} · <span className="text-sky-soft/80">{project.domain}</span>
         </p>
-        <h1 className="mt-4 font-display text-[clamp(2.4rem,6vw,4rem)] font-normal leading-[1.02] tracking-tight text-paper">
+        <h1 className="mt-4 font-display text-[clamp(2.4rem,6vw,4rem)] font-bold leading-[1.02] tracking-[-0.04em] text-paper">
           {project.name}
         </h1>
-        <p className="mt-4 font-display text-xl italic text-gold-400">{project.tagline}</p>
+        <p className="mt-4 -rotate-1 font-hand text-2xl text-pen">{project.tagline}</p>
 
         {project.metric ? (
           <p className="mt-8">
@@ -279,11 +280,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<Params
         <section className="mt-14">
           <Heading>Built with</Heading>
           <div className="rule-fade mt-5" />
-          <ul className="mt-6 flex flex-wrap gap-2">
-            {project.stack.map((s) => (
-              <Tag key={s}>{s}</Tag>
-            ))}
-          </ul>
+          <TechStack items={project.stack} className="mt-6" />
           <div className="mt-8 flex flex-wrap gap-5">
             {project.links?.map((l) => (
               <a

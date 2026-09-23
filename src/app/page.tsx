@@ -14,6 +14,8 @@ import { Ask } from "@/components/Ask";
 import { Gallery } from "@/components/Gallery";
 import { getGalleryPhotos } from "@/lib/gallery";
 import { runEvals } from "@/lib/evals";
+import { publicFileExists } from "@/lib/publicFile";
+import { profile } from "@/content/site";
 
 export default function Home() {
   const photos = getGalleryPhotos();
@@ -22,7 +24,10 @@ export default function Home() {
 
   return (
     <>
-      <Nav hide={photos.length ? [] : ["#gallery"]} />
+      <Nav
+        hide={photos.length ? [] : ["#gallery"]}
+        avatar={publicFileExists(profile.photo) ? profile.photo : null}
+      />
       <main id="main">
         <Hero />
         <Ask llmEnabled={llmEnabled} evals={runEvals()} />

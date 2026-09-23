@@ -28,10 +28,33 @@ export const profile = {
   now: "Replacing KlarText's substring search with clause-level chunks and hybrid retrieval: Postgres full-text + embeddings, merged with reciprocal rank fusion",
   nowUpdated: "Sep 2026",
 
-  // Hero
+  // Hero. `headline` is also used by the social share image.
   headline: ["Hi, I'm Astha.", "I build AI features and the apps around them."],
+  heroLines: ["I'm Astha,", "an engineer who"],
+  // Cycles in handwriting after "an engineer who". Keep them short.
+  heroPhrases: ["makes AI behave", "ships RAG", "writes the evals", "reads the logs"],
+  // **Wrapped** phrases get a highlighter swipe.
   subhead:
-    "I'm a fullstack engineer at Hyscaler. Most of my work is on RAG and LLM features for client products in healthcare, fintech, legal-tech and fundraising, along with the Node backends and React frontends they sit in.",
+    "I'm a fullstack engineer at Hyscaler. Most of my work is **RAG and LLM features** for client products in healthcare, fintech, legal-tech and fundraising, and the Node backends and React frontends they sit in. I care about **whether the answer is right**, not just whether it answers.",
+  // Written on the polaroid under the photo.
+  photoCaption: "Based in Bhubaneswar, Odisha",
+  // Logo row under the hero, in order.
+  builderStack: [
+    "TypeScript",
+    "Node.js",
+    "NestJS",
+    "Next.js",
+    "React",
+    "PostgreSQL",
+    "pgvector",
+    "Redis",
+    "Docker",
+    "OpenAI",
+    "Claude",
+    "Gemini",
+  ],
+  // A second, more relaxed photo for the About section. Falls back to `photo`.
+  aboutPhoto: "/gallery/off-the-clock-1.jpg",
 
   // Sits under the metric band.
   metricsNote:
@@ -704,6 +727,20 @@ export const gallery: GalleryPhoto[] = [
   { file: "off-the-clock-2.jpg", caption: "Rooftop dinner on a night off", tag: "Off the clock" },
   // TODO: add hackathon photos here with tag "Hackathon"; the filter buttons appear once there are two tags.
 ];
+
+/** Handwritten margin note above each section heading, keyed by section id. */
+export const kickers: Record<string, string> = {
+  ask: "go on, try it",
+  work: "things I've built",
+  experience: "where I've been",
+  about: "the person behind it",
+  skills: "tools I reach for",
+  github: "fresh off the keyboard",
+  writing: "outside the day job",
+  gallery: "proof I leave my desk",
+  education: "where it started",
+  contact: "say hi!",
+};
 
 export const nav = [
   { label: "Ask AI", href: "#ask" },

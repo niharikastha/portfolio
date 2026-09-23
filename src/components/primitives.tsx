@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
+import { kickers } from "@/content/site";
 
 /** Bold a **wrapped** span inside content strings, so data stays plain text. */
 export function RichText({ text }: { text: string }) {
@@ -64,9 +65,10 @@ export function Section({
     <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-28 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-6">
         <Reveal>
+          {kickers[id] ? <Kicker text={kickers[id]} /> : null}
           <h2
             id={`${id}-heading`}
-            className="font-display text-[clamp(2rem,4.5vw,3rem)] font-normal leading-tight tracking-tight text-paper"
+            className="font-display text-[clamp(2rem,4.5vw,3.1rem)] font-bold leading-tight tracking-[-0.03em] text-paper"
           >
             {title}
           </h2>
@@ -89,5 +91,40 @@ export function Tag({ children }: { children: ReactNode }) {
     <li className="rounded-full border border-ink-700 bg-ink-850 px-3 py-1 font-mono text-[11px] tracking-wide text-paper-dim transition-colors duration-300 hover:border-gold-500/60 hover:text-paper">
       {children}
     </li>
+  );
+}
+
+/** A margin note in red pen, with a little arrow curling down to the heading. */
+export function Kicker({ text }: { text: string }) {
+  return (
+    <p className="mb-1 flex -rotate-2 items-end gap-1.5 font-hand text-xl text-pen">
+      <span>{text}</span>
+      <svg aria-hidden width="30" height="22" viewBox="0 0 30 22" fill="none" className="translate-y-2">
+        <path
+          d="M2 3c9 0 17 3 20 12m0 0-5-2m5 2 2-5"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </p>
+  );
+}
+
+/** Like RichText, but **wrapped** phrases get a highlighter swipe instead of bold. */
+export function MarkedText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") ? (
+          <mark key={i} className="marker bg-transparent text-paper">
+            {part.slice(2, -2)}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
   );
 }

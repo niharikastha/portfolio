@@ -1,5 +1,6 @@
 import { experience } from "@/content/site";
-import { Reveal, RichText, Section, Tag } from "./primitives";
+import { Reveal, RichText, Section } from "./primitives";
+import { TechStack } from "./TechStack";
 
 export function Experience() {
   return (
@@ -10,7 +11,7 @@ export function Experience() {
             <article className="grid gap-8 lg:grid-cols-[1fr_2fr]">
               <header className="lg:sticky lg:top-28 lg:self-start">
                 <h3 className="text-3xl font-medium tracking-tight text-paper">{job.company}</h3>
-                <p className="mt-2 font-display text-xl italic text-gold-400">{job.role}</p>
+                <p className="mt-2 font-hand text-xl text-pen">{job.role}</p>
                 <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.16em] text-paper-faint">
                   {job.period}
                 </p>
@@ -54,11 +55,7 @@ export function Experience() {
                   ))}
                 </ul>
 
-                <ul className="mt-9 flex flex-wrap gap-2">
-                  {job.stack.map((s) => (
-                    <Tag key={s}>{s}</Tag>
-                  ))}
-                </ul>
+                <TechStack items={job.stack} size="sm" className="mt-9" />
               </div>
             </article>
           </Reveal>
