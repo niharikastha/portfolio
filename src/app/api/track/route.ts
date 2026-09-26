@@ -18,7 +18,7 @@ import { sql } from "@vercel/postgres";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  if (!process.env.POSTGRES_URL) return NextResponse.json({ ok: false }, { status: 204 });
+  if (!process.env.POSTGRES_URL) return NextResponse.json({ ok: false, skipped: true });
 
   let body: { path?: string; referrer?: string; sessionId?: string };
   try {
