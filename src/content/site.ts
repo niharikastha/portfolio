@@ -531,6 +531,157 @@ export const projects: Project[] = [
     },
   },
   {
+    slug: "walking-pal",
+    name: "Walking Pal",
+    tagline: "A startup app for walking with people nearby and earning coffee rewards for it. I worked on it from the funding stage to launch.",
+    period: "Jun 2023 — Oct 2025",
+    domain: "Mobile · Social · Startup",
+    kind: "personal",
+    featured: true,
+    problem:
+      "People walk more when someone is expecting them, and more again when there's something in it for them. On Walking Pal you create or join walks and communities, and each walk you actually attend is logged. Walk a set distance with someone and you earn a coupon to redeem at partner coffee outlets. I was there from raising the money to shipping the app.",
+    highlights: [
+      // TODO: add the funding specifics (amount, source, what I did in the raise).
+      "Worked on it the whole way: **raising the funding**, scoping the MVP, building it and launching it, on a three-person team.",
+      "Wrote the **entire 2.0 backend** myself in about four months: phone OTP and Google sign-in, onboarding, walks, join requests, notifications and chat.",
+      "People **create events and communities**, join them and **log their walks**. Complete a set distance with someone and you earn a **coupon redeemable at partner coffee outlets**, so walking turns into something you can spend.",
+      "Built **QR check-in**: an approved walker gets a unique 8-digit code, and the host scans it (or types it in) when they meet, so a logged walk (and the reward it earns) is one that really happened.",
+      "Used for **500+ community walks a month**; daily active users went up **23%** after the social features launched.",
+    ],
+    stack: [
+      "React Native",
+      "Sails.js",
+      "Node.js",
+      "MongoDB",
+      "Firebase Cloud Messaging",
+      "Stream Chat",
+      "Google Maps",
+    ],
+    metric: { value: "+23%", label: "daily active users" },
+    links: [
+      { label: "Website", href: "https://www.walkingpal.in/" },
+      { label: "Source", href: "https://github.com/niharikastha/walkingpal" },
+    ],
+    caseStudy: {
+      // TODO: fill in the funding and launch notes with real details, plus partner
+      // outlets and redemption numbers if there are any.
+      pipeline: [
+        { label: "Raise funding", note: "Pitch and early funding for the rebuild" },
+        { label: "Scope the MVP", note: "Events, communities, check-in, rewards" },
+        { label: "Backend", note: "Sails.js API from scratch · Jun 2025" },
+        { label: "App", note: "React Native, built with a team of 3" },
+        { label: "Social layer", note: "Push, QR check-in, chat · Aug–Sep" },
+        { label: "Rewards", note: "Walk a set distance together, earn a coffee coupon" },
+        { label: "Launch", note: "Store builds and the first community walks" },
+      ],
+      diagrams: [
+        {
+          title: "Walking Pal 2.0 architecture",
+          caption:
+            "The app talks to a single Sails.js API. Check-in logs each walk, and walking a set distance with someone earns a coupon to redeem at partner coffee outlets. The API writes every notification to MongoDB before pushing it through Firebase, and it gives out Stream tokens so the app can chat directly with Stream.",
+          nodes: [
+            { id: "walkers", label: "Walkers", note: "hosts + joiners", col: 0, row: 0, shape: "user" },
+            { id: "app", label: "React Native app", note: "iOS + Android", col: 1, row: 0 },
+            { id: "api", label: "Sails.js API", note: "auth, walks, joins", col: 2, row: 0 },
+            { id: "mongo", label: "MongoDB", note: "members, walks, inbox", col: 3, row: 0, shape: "db" },
+            { id: "maps", label: "Google Maps", note: "places, pins", col: 1, row: 1, shape: "ext" },
+            { id: "qr", label: "Check-in", note: "QR or 8-digit code", col: 2, row: 1, shape: "tool" },
+            { id: "fcm", label: "Firebase FCM", note: "push", col: 3, row: 1, shape: "ext" },
+            { id: "stream", label: "Stream Chat", note: "direct + group", col: 1, row: 2, shape: "ext" },
+            { id: "google", label: "Google / OTP", note: "sign-in", col: 2, row: 2, shape: "ext" },
+            { id: "rewards", label: "Rewards", note: "distance → coupon", col: 3, row: 2 },
+            { id: "cafes", label: "Coffee outlets", note: "redeem coupons", col: 4, row: 2, shape: "ext" },
+          ],
+          edges: [
+            { from: "walkers", to: "app" },
+            { from: "app", to: "api", label: "REST + JWT", both: true },
+            { from: "api", to: "mongo", both: true },
+            { from: "app", to: "maps", dashed: true },
+            { from: "api", to: "qr", label: "verify" },
+            { from: "api", to: "fcm", label: "notify" },
+            { from: "fcm", to: "app", dashed: true },
+            { from: "app", to: "stream", label: "messages", both: true },
+            { from: "api", to: "stream", label: "tokens", dashed: true },
+            { from: "api", to: "google", dashed: true },
+            { from: "qr", to: "rewards", label: "logged walk" },
+            { from: "rewards", to: "cafes", label: "redeem" },
+          ],
+        },
+      ],
+      decisions: [
+        {
+          title: "Start 2.0 fresh",
+          body: "2.0 started as a new React Native project with a new backend instead of building on the v1 codebase. That meant the data model could be designed around people and walks from the first commit.",
+        },
+        {
+          title: "Hosts approve who joins",
+          body: "Walking with strangers depends on trust, so joining is a request, not an open RSVP. The host is notified and approves or rejects each one. Capacity is checked both when someone asks and when the host approves, so a full walk can't be overbooked from either side.",
+        },
+        {
+          title: "Events and communities",
+          body: "Anyone can create a walk: a one-to-one hangout or a group walk, public or private, with a place on the map, a time, a category and an optional cap. When creating one, a host can also launch it inside a community, so regular groups have a home and newcomers have something to join.",
+        },
+        {
+          title: "Check-in proves the walk happened",
+          body: "Approval gives the walker a unique 8-digit code. It's left out of the API's default JSON and only returned to that participant. At the meetup the host scans it as a QR code or types it in. Every attempt is logged, and checking in twice is rejected, so a 'walk' in the data means people actually met.",
+        },
+        {
+          title: "Rewards only for walks that happened",
+          body: "You earn a coupon by walking a set distance with someone, and you redeem it at a partner coffee outlet. A walk only counts once both people have checked in in person, so tapping 'join' earns nothing, and the cafés pay for real foot traffic, not signups. Rewarding distance walked together, not attendance, keeps the incentive tied to what the app is for.",
+        },
+        {
+          title: "Save the notification first, then push it",
+          body: "Every notification is written to MongoDB for the in-app inbox before it's sent through Firebase. If a push fails, the request still succeeds and the notification is still waiting in the app.",
+        },
+        {
+          title: "Buy chat, build the rest",
+          body: "Chat is a whole product of its own (delivery, read receipts, offline sync), so it runs on Stream. The backend only gives out tokens and creates the direct and group channels for each walk. Only the host can open a group chat.",
+        },
+        {
+          title: "Soft deletes for walks",
+          body: "Hard deletes are blocked at the model level. A deleted walk is only hidden, so join requests, check-ins and notifications that point to it still resolve.",
+        },
+      ],
+      techChoices: [
+        { tech: "Sails.js", why: "Conventions, policies and model hooks out of the box, so one backend developer could ship auth, walks and notifications quickly." },
+        { tech: "MongoDB", why: "Onboarding and walk fields changed nearly every week during the MVP. A flexible schema meant changing a field didn't need a migration." },
+        { tech: "React Native", why: "One codebase for iOS and Android, which is what a three-person team can realistically maintain." },
+        { tech: "Stream Chat", why: "Reliable chat is months of work on its own. Stream handles it, and the team's time went into walks and check-in." },
+        { tech: "Firebase Cloud Messaging", why: "One push API for both platforms, and the app already used Firebase." },
+      ],
+      knownGaps: [
+        "Finding walks is text search on title, category and city plus pagination. Walks store latitude and longitude, but there's no geospatial 'near me' query yet.",
+        "Your own walks are filtered out after a page is fetched, so a page can come back with fewer results than requested.",
+        "The capacity check counts approvals and then writes, with no transaction, so two approvals at the same moment could overfill a walk.",
+        "Uploaded images are stored on the server's disk, which won't work once there's more than one instance.",
+        "There are no automated tests.",
+      ],
+      improvements: [
+        {
+          title: "Real 'near me' discovery",
+          body: "Store each walk's location as GeoJSON with a **2dsphere index** and query with `$near` and a radius, sorted by distance and start time.",
+        },
+        {
+          title: "Make capacity atomic",
+          body: "Keep a joined count on the walk and increment it with a conditional update (only while it's under the maximum), so the limit is enforced by the database, not by a count-then-write.",
+        },
+        {
+          title: "Move uploads to object storage",
+          body: "Put images in S3 or GCS behind signed URLs so the API is stateless and can scale out.",
+        },
+      ],
+      testing: {
+        status:
+          "No automated tests. The backend's test script is still the Sails placeholder, and features were checked by hand on Android and iOS builds.",
+        plan: [
+          "API tests for the join flow: request, approve, reject, cancel, a full walk, and duplicate requests.",
+          "Tests for check-in: a wrong code, a code for another walk, a double check-in, and a non-host trying to verify.",
+          "A concurrency test that approves two requests at once for the last spot.",
+        ],
+      },
+    },
+  },
+  {
     slug: "this-site",
     name: "This portfolio",
     tagline: "A portfolio you can question, with its own retrieval engine and eval.",
@@ -722,25 +873,6 @@ export const projects: Project[] = [
       "Contributed to the shared API, auth and deployment tooling used across the platform.",
     ],
     stack: ["NestJS", "Next.js", "PostgreSQL", "Prisma", "pnpm", "Turborepo", "PM2"],
-  },
-  {
-    slug: "walking-pal",
-    name: "Walking Pal",
-    tagline: "An app for finding people to go walking with.",
-    period: "Jun 2023 — Dec 2023",
-    domain: "Mobile · Social",
-    kind: "personal",
-    featured: false,
-    problem:
-      "People tend to walk more when someone is expecting them, so the app was built around meeting up for walks.",
-    highlights: [
-      "Built the social features: WebSocket chat, adding friends by QR code, and push notifications.",
-      "Added location-based walk discovery with calendar sync, used for **500+ community walks a month**.",
-      "Daily active users went up **23%** after the social features launched.",
-    ],
-    stack: ["React Native", "Node.js", "WebSockets", "MongoDB", "Push notifications"],
-    metric: { value: "+23%", label: "daily active users" },
-    links: [{ label: "Source", href: "https://github.com/niharikastha/walkingpal" }],
   },
 ];
 
