@@ -45,6 +45,7 @@ export const profile = {
     "NestJS",
     "Next.js",
     "React",
+    "React Native",
     "PostgreSQL",
     "pgvector",
     "Redis",
