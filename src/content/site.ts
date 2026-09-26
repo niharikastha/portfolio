@@ -63,7 +63,7 @@ export const profile = {
   // About
   about: [
     "I'm a fullstack engineer, and these days most of my time goes into the AI side of products: retrieval, chunking, checking whether the answers are actually right, and working out what to do when a provider goes down. Getting a model to respond is quick. Getting it reliable enough for a doctor or a lawyer to use takes most of the effort, and it's the part I enjoy.",
-    "I've been at Hyscaler since January 2024 and have worked on four client products there. On LexRoss, a legal research tool, I brought hallucinations down by 65% and made retrieval 40% faster by combining dense and sparse search. On Doctegrity, I built the sync between medical devices and physician dashboards over WebSockets and FHIR, which had to meet HIPAA rules for patient data.",
+    "I've been at Hyscaler since January 2024 and have worked on four client products there. On a legal research tool for lawyers, I brought hallucinations down by 65% and made retrieval 40% faster by combining dense and sparse search. On Doctegrity, I built the sync between medical devices and physician dashboards over WebSockets and FHIR, which had to meet HIPAA rules for patient data.",
     "Outside work I mostly build tools for my own problems. JobPilot goes through job postings every morning and sends me a shortlist, and KlarText explains German paperwork like rental contracts and visa letters in plain language. I do my best work on teams that care whether the AI is right, not just whether it answers.",
   ],
 
@@ -149,8 +149,8 @@ export const experience: Experience[] = [
     ],
     products: [
       { name: "Doctegrity", domain: "Healthcare" },
-      { name: "MerQube Hyally", domain: "Fintech" },
-      { name: "LexRoss", domain: "Legal AI" },
+      { name: "Stock Data Platform", domain: "Fintech" },
+      { name: "Legal Research Tool", domain: "Legal AI" },
       { name: "R4Funds", domain: "Government fundraising" },
     ],
   },
@@ -615,7 +615,7 @@ export const projects: Project[] = [
         { tech: "Streaming", why: "The answer appears as it's written instead of after a blank wait." },
       ],
       knownGaps: [
-        "Keyword retrieval misses paraphrases. The one eval failure left is 'the legal research tool': the About paragraph uses that exact phrase, so it outranks the LexRoss passage.",
+        "Keyword retrieval misses paraphrases. The one eval failure left is 'the legal research tool': the About paragraph uses that exact phrase, so it outranks the project passage.",
         "Rate limits are in memory, so each server instance counts separately and they reset on a cold start. Fine for a portfolio, not for a real product.",
         "The eval checks retrieval only. It doesn't yet check whether the LLM's answer is grounded in the passages it cites.",
       ],
@@ -671,8 +671,8 @@ export const projects: Project[] = [
     metric: { value: "100%", label: "HIPAA transmission compliance" },
   },
   {
-    slug: "lexross",
-    name: "LexRoss",
+    slug: "legal-research",
+    name: "Legal Research Tool",
     tagline: "Legal research answers that point back to their sources.",
     period: "2024 — Present",
     domain: "Legal AI · RAG",
@@ -689,8 +689,8 @@ export const projects: Project[] = [
     metric: { value: "65%", label: "fewer hallucinations" },
   },
   {
-    slug: "merqube-hyally",
-    name: "MerQube Hyally",
+    slug: "stock-data-platform",
+    name: "Stock Data Platform",
     tagline: "Importing large volumes of financial CSV data without dropping rows.",
     period: "2024 — Present",
     domain: "Fintech · Data pipelines",
@@ -872,7 +872,6 @@ export type GalleryPhoto = {
 export const gallery: GalleryPhoto[] = [
   { file: "devfest-bhubaneswar-1.jpg", caption: "DevFest Bhubaneswar, run by Google Developer Groups", tag: "GDG" },
   { file: "devfest-bhubaneswar-2.jpg", caption: "In the hall between sessions at DevFest Bhubaneswar", tag: "GDG" },
-  { file: "off-the-clock-1.jpg", caption: "Dressed up for an evening out", tag: "Off the clock" },
   { file: "off-the-clock-2.jpg", caption: "Rooftop dinner on a night off", tag: "Off the clock" },
   // TODO: add hackathon photos here with tag "Hackathon"; the filter buttons appear once there are two tags.
 ];

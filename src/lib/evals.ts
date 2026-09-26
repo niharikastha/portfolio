@@ -11,15 +11,15 @@ type Case = { q: string; expect: string[] | null };
 
 const CASES: Case[] = [
   { q: "What RAG work have you done?", expect: ["Hyscaler · Experience"] },
-  { q: "How did you reduce hallucinations?", expect: ["Hyscaler · Experience", "Project · LexRoss"] },
+  { q: "How did you reduce hallucinations?", expect: ["Hyscaler · Experience", "Project · Legal Research Tool"] },
   { q: "Have you worked in healthcare?", expect: ["Project · Doctegrity", "Hyscaler · Experience"] },
   { q: "Do you know HIPAA and FHIR?", expect: ["Project · Doctegrity"] },
   { q: "What is JobPilot?", expect: ["Project · JobPilot"] },
   { q: "How many job postings does your agent scan?", expect: ["Project · JobPilot"] },
   { q: "What is KlarText?", expect: ["Project · KlarText"] },
   { q: "Anything for German documents?", expect: ["Project · KlarText"] },
-  { q: "Tell me about the legal research tool", expect: ["Project · LexRoss"] },
-  { q: "Have you worked on fintech CSV pipelines?", expect: ["Project · MerQube Hyally"] },
+  { q: "Tell me about the legal research tool", expect: ["Project · Legal Research Tool"] },
+  { q: "Have you worked on fintech CSV pipelines?", expect: ["Project · Stock Data Platform"] },
   { q: "Any government projects?", expect: ["Project · R4Funds"] },
   { q: "Have you built a mobile app?", expect: ["Project · Walking Pal"] },
   { q: "Where did you study?", expect: ["Education"] },
