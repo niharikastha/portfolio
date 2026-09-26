@@ -69,14 +69,21 @@ zero config needed.
 
 The contact form works without these, but it will tell visitors it isn't
 connected and point them at the mailto link instead. To actually receive mail,
-sign up at [resend.com](https://resend.com) and set:
+plug in any SMTP provider (Gmail app password, Zoho, SendGrid, Postmark…):
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `RESEND_API_KEY` | yes | Without it, `/api/contact` returns 503. |
+| `SMTP_HOST` | yes | e.g. `smtp.gmail.com`, `smtp.zoho.com`, `smtp.sendgrid.net`. |
+| `SMTP_PORT` | no | Defaults to `587` (STARTTLS). Use `465` for SSL. |
+| `SMTP_SECURE` | no | `true` for port 465. Auto-detected otherwise. |
+| `SMTP_USER` | yes | SMTP username — usually your sending email. |
+| `SMTP_PASS` | yes | SMTP password or **app password** (Gmail requires this). |
+| `CONTACT_FROM` | no | `Name <no-reply@yourdomain.com>`. Defaults to `SMTP_USER`. |
 | `CONTACT_TO` | no | Defaults to `profile.email`. |
-| `CONTACT_FROM` | no | Must be a domain verified in Resend. Defaults to Resend's shared sandbox sender, which is fine for testing but will land in spam in production. |
 | `NEXT_PUBLIC_SITE_URL` | no | Only needed for a custom domain, e.g. `https://asthaniharika.com`. |
+| `POSTGRES_URL` | no | Enables the visitor log at `/admin/visitors`. Get it from Vercel → Storage → Postgres → Connect. Then run `db/migrations/001_visits.sql` against it once. Without this var, the site works but doesn't record visits. |
+| `ADMIN_USER` | yes if POSTGRES_URL set | Username for the basic-auth prompt at `/admin/*`. |
+| `ADMIN_PASSWORD` | yes if POSTGRES_URL set | Password for the basic-auth prompt at `/admin/*`. |
 
 ### How the canonical URL is decided
 

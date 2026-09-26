@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, IBM_Plex_Mono, Kalam } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { profile } from "@/content/site";
 import { getSiteUrl } from "@/lib/siteUrl";
+import { Tracker } from "@/components/Tracker";
 import "./globals.css";
 
 const sans = Plus_Jakarta_Sans({
@@ -157,6 +158,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         {/* Cookieless page views; only reports when deployed on Vercel with Analytics enabled. */}
         <Analytics />
+        {/* Private visitor log; writes to Vercel Postgres. See /admin/visitors. */}
+        <Tracker />
       </body>
     </html>
   );

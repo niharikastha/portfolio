@@ -1,23 +1,28 @@
 import { NextResponse } from "next/server";
+import nodemailer, { type Transporter } from "nodemailer";
 import { profile } from "@/content/site";
 
 /**
  * Contact endpoint.
  *
- * Sends via Resend (https://resend.com) when RESEND_API_KEY is set — no SDK, just
- * their REST API. Without the key the form fails politely and the UI points the
- * visitor at the mailto link, so the site is never broken, only degraded.
+ * Sends via SMTP (nodemailer) when SMTP_HOST/USER/PASS are set. Without them
+ * the form fails politely and the UI points visitors at the mailto link, so
+ * the site is never broken, only degraded.
  *
  * Env:
- *   RESEND_API_KEY  — required to actually send
- *   CONTACT_TO      — defaults to the address in site.ts
- *   CONTACT_FROM    — must be a domain you've verified in Resend
+ *   SMTP_HOST      — e.g. smtp.gmail.com, smtp.zoho.com, smtp.sendgrid.net
+ *   SMTP_PORT      — 587 (STARTTLS) or 465 (SSL). Defaults to 587.
+ *   SMTP_SECURE    — "true" for port 465. Defaults to false.
+ *   SMTP_USER      — SMTP username (usually your email)
+ *   SMTP_PASS      — SMTP password or app password
+ *   CONTACT_FROM   — "Name <no-reply@yourdomain.com>". Defaults to SMTP_USER.
+ *   CONTACT_TO     — where to deliver. Defaults to profile.email.
  */
+
+export const runtime = "nodejs";
 
 const MAX_LEN = { name: 100, email: 200, subject: 200, message: 5000 };
 
-// Crude per-instance throttle. Good enough to stop a bored bot; real abuse
-// protection belongs at the edge (Vercel WAF / Cloudflare).
 const hits = new Map<string, number[]>();
 const WINDOW_MS = 60 * 60 * 1000;
 const LIMIT = 5;
@@ -34,6 +39,22 @@ function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
   );
+}
+
+let cachedTransporter: Transporter | null = null;
+function getTransporter() {
+  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env;
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null;
+  if (cachedTransporter) return cachedTransporter;
+
+  const port = Number(process.env.SMTP_PORT ?? 587);
+  cachedTransporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port,
+    secure: process.env.SMTP_SECURE === "true" || port === 465,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+  return cachedTransporter;
 }
 
 export async function POST(request: Request) {
@@ -78,50 +99,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That message is too long." }, { status: 400 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-
-  if (!apiKey) {
-    console.warn("[contact] RESEND_API_KEY not set — message not delivered.");
-    return NextResponse.json(
-      { error: "The form isn't connected yet." },
-      { status: 503 },
-    );
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.warn("[contact] SMTP env not set — message not delivered.");
+    return NextResponse.json({ error: "The form isn't connected yet." }, { status: 503 });
   }
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.CONTACT_FROM ?? "Portfolio <onboarding@resend.dev>",
-        to: [process.env.CONTACT_TO ?? profile.email],
-        reply_to: email,
-        subject: `[Portfolio] ${subject}`,
-        html: `
-          <div style="font-family:system-ui,sans-serif;line-height:1.6">
-            <h2 style="margin:0 0 16px">New message from your portfolio</h2>
-            <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-            <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-            <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
-            <hr style="border:none;border-top:1px solid #ddd;margin:20px 0" />
-            <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
-          </div>
-        `,
-      }),
+    await transporter.sendMail({
+      from: process.env.CONTACT_FROM ?? process.env.SMTP_USER,
+      to: process.env.CONTACT_TO ?? profile.email,
+      replyTo: `${name} <${email}>`,
+      subject: `[Portfolio] ${subject}`,
+      text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\n${message}`,
+      html: `
+        <div style="font-family:system-ui,sans-serif;line-height:1.6">
+          <h2 style="margin:0 0 16px">New message from your portfolio</h2>
+          <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+          <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+          <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
+          <hr style="border:none;border-top:1px solid #ddd;margin:20px 0" />
+          <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
+        </div>
+      `,
     });
-
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      console.error("[contact] Resend rejected the message:", res.status, detail);
-      return NextResponse.json({ error: "Couldn't send that message." }, { status: 502 });
-    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[contact] Unexpected failure:", err);
+    console.error("[contact] SMTP send failed:", err);
     return NextResponse.json({ error: "Couldn't send that message." }, { status: 500 });
   }
 }
