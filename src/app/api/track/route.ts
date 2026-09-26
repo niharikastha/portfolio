@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sql } from "@vercel/postgres";
+import { getPool } from "@/lib/db";
 
 /**
  * Visitor tracking endpoint.
@@ -12,13 +12,14 @@ import { sql } from "@vercel/postgres";
  * is missing, we just don't record anything.
  *
  * Env:
- *   POSTGRES_URL — from Vercel Postgres integration
+ *   POSTGRES_URL — any Postgres connection string (Neon, Prisma, Vercel, etc.)
  */
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  if (!process.env.POSTGRES_URL) return NextResponse.json({ ok: false, skipped: true });
+  const pool = getPool();
+  if (!pool) return NextResponse.json({ ok: false, skipped: true });
 
   let body: { path?: string; referrer?: string; sessionId?: string };
   try {
@@ -43,10 +44,11 @@ export async function POST(request: Request) {
   const sessionId = (body.sessionId ?? "").slice(0, 100) || null;
 
   try {
-    await sql`
-      INSERT INTO visits (ip, user_agent, country, city, region, referrer, path, session_id)
-      VALUES (${ip}, ${ua}, ${country}, ${city}, ${region}, ${referrer}, ${path}, ${sessionId})
-    `;
+    await pool.query(
+      `INSERT INTO visits (ip, user_agent, country, city, region, referrer, path, session_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [ip, ua, country, city, region, referrer, path, sessionId],
+    );
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[track] insert failed:", err);

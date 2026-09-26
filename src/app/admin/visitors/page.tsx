@@ -1,4 +1,4 @@
-import { sql } from "@vercel/postgres";
+import { getPool } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,6 @@ type Visit = {
 
 function shortUA(ua: string | null): string {
   if (!ua) return "—";
-  // Pull the most recognisable bit — "Chrome/…", "Safari/…", "Firefox/…", "bot".
   const m =
     ua.match(/(Chrome|Firefox|Safari|Edge|OPR|CriOS|FxiOS|bot|Bot)\/[\d.]+/) ??
     ua.match(/(Googlebot|bingbot|DuckDuckBot|Slackbot|Twitterbot)/i);
@@ -27,39 +26,39 @@ function shortUA(ua: string | null): string {
 }
 
 async function loadVisits(): Promise<Visit[]> {
-  if (!process.env.POSTGRES_URL) return [];
-  const { rows } = await sql<Visit>`
-    SELECT id, seen_at, ip, user_agent, country, city, region, referrer, path, session_id
-    FROM visits
-    ORDER BY seen_at DESC
-    LIMIT 200
-  `;
+  const pool = getPool();
+  if (!pool) return [];
+  const { rows } = await pool.query<Visit>(
+    `SELECT id, seen_at, ip, user_agent, country, city, region, referrer, path, session_id
+     FROM visits
+     ORDER BY seen_at DESC
+     LIMIT 200`,
+  );
   return rows;
 }
 
 async function loadStats() {
-  if (!process.env.POSTGRES_URL) {
-    return { total: 0, uniqueSessions: 0, uniqueIPs: 0, last24h: 0 };
-  }
-  const { rows } = await sql<{
-    total: number;
-    unique_sessions: number;
-    unique_ips: number;
-    last_24h: number;
-  }>`
-    SELECT
-      COUNT(*)::int                                                       AS total,
-      COUNT(DISTINCT session_id)::int                                     AS unique_sessions,
-      COUNT(DISTINCT ip)::int                                             AS unique_ips,
-      COUNT(*) FILTER (WHERE seen_at > NOW() - INTERVAL '24 hours')::int  AS last_24h
-    FROM visits
-  `;
+  const pool = getPool();
+  if (!pool) return { total: 0, uniqueSessions: 0, uniqueIPs: 0, last24h: 0 };
+  const { rows } = await pool.query<{
+    total: string;
+    unique_sessions: string;
+    unique_ips: string;
+    last_24h: string;
+  }>(
+    `SELECT
+       COUNT(*)::text                                                       AS total,
+       COUNT(DISTINCT session_id)::text                                     AS unique_sessions,
+       COUNT(DISTINCT ip)::text                                             AS unique_ips,
+       COUNT(*) FILTER (WHERE seen_at > NOW() - INTERVAL '24 hours')::text  AS last_24h
+     FROM visits`,
+  );
   const r = rows[0];
   return {
-    total: r?.total ?? 0,
-    uniqueSessions: r?.unique_sessions ?? 0,
-    uniqueIPs: r?.unique_ips ?? 0,
-    last24h: r?.last_24h ?? 0,
+    total: Number(r?.total ?? 0),
+    uniqueSessions: Number(r?.unique_sessions ?? 0),
+    uniqueIPs: Number(r?.unique_ips ?? 0),
+    last24h: Number(r?.last_24h ?? 0),
   };
 }
 
@@ -76,9 +75,10 @@ export default async function VisitorsPage() {
 
       {!configured && (
         <div className="mt-6 rounded-md border border-amber-400/40 bg-amber-400/10 p-4 text-amber-900 dark:text-amber-300">
-          <strong>POSTGRES_URL isn&apos;t set.</strong> Add the Vercel Postgres
-          integration and run <code>db/migrations/001_visits.sql</code> against
-          the database to start recording.
+          <strong>POSTGRES_URL isn&apos;t set.</strong> Add a Postgres connection
+          string in your Vercel env, then run{" "}
+          <code>db/migrations/001_visits.sql</code> against the database to
+          start recording.
         </div>
       )}
 
